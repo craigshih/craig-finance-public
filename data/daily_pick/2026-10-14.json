@@ -1,0 +1,143 @@
+{
+ "date": "2026-10-14",
+ "code": "2330",
+ "name": "台積電",
+ "market": "上市",
+ "industry": "半導體業",
+ "story": {
+  "title": "台積電如何從政府創業到全球AI晶片領航？",
+  "one_liner": "從台灣半導體起家到美國先進封裝，台積電是全球晶圓代工的核心。",
+  "industry": "台積電是pure‑play foundry（只代工不設計）企業，提供先進製程、3D堆疊與先進封裝服務。上游是光刻機、設備供應商如東京威力科創；下游客戶包括Apple、AMD、NVIDIA、Google等，競爭對手有聯電、世界先進等。",
+  "history": [
+   {
+    "when": "1987",
+    "what": "張忠謀創立台積電，政府投資七千萬美元，首座工研院租用廠房。"
+   },
+   {
+    "when": "1994",
+    "what": "在台灣證券交易所掛牌上市，開始公開募資。"
+   },
+   {
+    "when": "2016",
+    "what": "市值首次超過IBM，成為全球最大晶圓代工廠。"
+   },
+   {
+    "when": "2020",
+    "what": "宣布在美國亞利桑那州投資120億美元建5奈米廠，擴大全球布局。"
+   },
+   {
+    "when": "2024",
+    "what": "亞利桑那廠以4奈米量產，獲美國《晶片與科學法案》補助。"
+   },
+   {
+    "when": "2026-10-14",
+    "what": "公布第三季營收1.49兆元，AI先進封裝成新焦點。"
+   }
+  ],
+  "now": [
+   "2026-10-14 法說會公布第三季營收1.49兆元，顯示AI晶片需求持續成長。",
+   "同日新聞指出，先進封裝成AI晶片新關鍵，台積電封裝產能擴增數倍。",
+   "亞利桑那4奈米廠在2024年第四季量產，持續提升美國本土供應鏈。"
+  ],
+  "opportunities": [
+   "AI與高效能運算需求推動先進封裝與HBM堆疊，台積電可擴大營收。",
+   "美國《晶片與科學法案》補助與貸款，提升亞利桑那廠產能與技術領先。",
+   "與SK海力士合作開發HBM4 Base Die，深化記憶體封裝市場。"
+  ],
+  "risks": [
+   "美國對中國出口管制可能影響部分客戶訂單。",
+   "先進製程研發成本高，若技術落後會失去高價值客戶。",
+   "全球半導體供需波動，可能導致產能利用率下降。"
+  ],
+  "watch": [
+   "下季財報營收與毛利率變化。",
+   "亞利桑那4奈米廠量產進度與產能利用率。",
+   "AI晶片先進封裝訂單成長率。"
+  ],
+  "terms": [
+   {
+    "term": "pure‑play foundry",
+    "plain": "只提供代工服務，不自行設計或販售晶片的公司模式。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=pure%E2%80%91play%20foundry&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "先進封裝",
+    "plain": "將多顆晶片或記憶體堆疊、連接在一起，提高效能與密度的技術。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=%E5%85%88%E9%80%B2%E5%B0%81%E8%A3%9D&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "HBM",
+    "plain": "高帶寬記憶體，用於AI與高效能運算的高速記憶體模組。",
+    "url": "https://zh.wikipedia.org/zh-tw/HBM",
+    "url_label": "維基百科"
+   },
+   {
+    "term": "晶片與科學法案",
+    "plain": "美國2022年通過的法案，提供晶圓廠資金補助與貸款，促進本土半導體產業。",
+    "url": "https://zh.wikipedia.org/zh-tw/%E6%99%B6%E7%89%87%E8%88%87%E7%A7%91%E5%AD%B8%E6%B3%95",
+    "url_label": "維基百科"
+   },
+   {
+    "term": "3DFabric",
+    "plain": "台積電的3D矽堆疊技術，將晶片垂直堆疊以提升效能。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=3DFabric&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "ADR",
+    "plain": "美國存託憑證，讓外國公司在美國證券交易所交易的股票。",
+    "url": "https://zh.wikipedia.org/zh-tw/ADR",
+    "url_label": "維基百科"
+   }
+  ]
+ },
+ "sources": [
+  {
+   "label": "證交所／櫃買中心公司基本資料（OpenAPI）",
+   "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  {
+   "label": "維基百科：台積電",
+   "url": "https://zh.wikipedia.org/zh-tw/%E5%8F%B0%E7%A9%8D%E9%9B%BB"
+  },
+  {
+   "label": "鉅亨網 2026-10-14：台積電法說明登場！第三季營收衝1.49兆元，真正影響股價的是這4件事",
+   "url": "https://news.cnyes.com/news/id/6630211"
+  },
+  {
+   "label": "鉅亨網 2026-10-14：〈台股開盤〉台積電攜塑化跟上亞股反彈腳步 漲逾500點重回48900關卡",
+   "url": "https://news.cnyes.com/news/id/6630006"
+  },
+  {
+   "label": "鉅亨網 2026-10-14：AI晶片變強不只靠製程！先進封裝成新關鍵 台積電布局受矚目",
+   "url": "https://news.cnyes.com/news/id/6629780"
+  },
+  {
+   "label": "工商時報 2026-02-27：台積大客戶換人！輝達超車蘋果 最燒錢「美國廠」大賺161億原因找到了",
+   "url": "https://www.ctee.com.tw/news/20260227700496-430501"
+  },
+  {
+   "label": "台積電 官方網站",
+   "url": "https://www.tsmc.com"
+  }
+ ],
+ "dropped_sentences": 0,
+ "why": {
+  "digest_mentions": 26,
+  "news_7d": 3,
+  "weekly": false,
+  "supply": true
+ },
+ "snapshot": {
+  "close": 2490.0,
+  "rev_yoy": 54.6,
+  "rev_month": "2026-09",
+  "gross": 67.03,
+  "pe": 28.86,
+  "yield": 0.88
+ },
+ "generated_at": "2026-10-14T15:52+08:00",
+ "emailed_at": "2026-10-14T16:03+08:00"
+}

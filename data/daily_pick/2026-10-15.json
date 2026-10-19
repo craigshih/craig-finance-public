@@ -1,0 +1,120 @@
+{
+ "date": "2026-10-15",
+ "code": "1301",
+ "name": "台塑",
+ "market": "上市",
+ "industry": "塑膠工業",
+ "story": {
+  "title": "台塑為什麼從PVC小作坊變成全產業巨擘？",
+  "one_liner": "從1954年創立的塑膠廠，到今天跨足能源、電子與醫療的台灣最大民營企業。",
+  "industry": "台塑是台灣塑膠工業的核心，主要產品包括PVC、聚乙烯、聚丙烯等基礎化學原料，並延伸至煉油、石化、纖維、電子級玻璃纖維等。上游是原油與天然氣供應商，下游客戶涵蓋汽車、電子、建材與醫療等產業，競爭對手包括南亞、台化等本土大型化工企業。",
+  "history": [
+   {
+    "when": "1954",
+    "what": "在高雄成立福懋塑膠公司，開始生產PVC"
+   },
+   {
+    "when": "1957",
+    "what": "更名為台灣塑膠工業股份有限公司，日產4公噸PVC"
+   },
+   {
+    "when": "1976",
+    "what": "首次海外投資，於印尼成立印尼南亞公司"
+   },
+   {
+    "when": "1992",
+    "what": "成立台塑石化公司，進入油品煉製與行銷"
+   },
+   {
+    "when": "2017",
+    "what": "成立管理中心，將所有權與經營權分離"
+   }
+  ],
+  "now": [
+   "與綠捷合作開發機器狗電池，計畫在彰濱二期廠2028年Q2量產5GWh電芯",
+   "全域能源概念展出，主攻AIDC高倍率電池，已導入台中半導體大廠AIDC備援"
+  ],
+  "opportunities": [
+   "能源轉型下，儲能電池需求增長，可為台塑新智能帶來長期營收",
+   "AI與自動化應用擴大，對高性能電池與電子級材料需求提升"
+  ],
+  "risks": [
+   "原油價格波動直接影響煉油與石化毛利",
+   "國際政治衝突（如美伊戰事）可能導致能源供應不穩定"
+  ],
+  "watch": [
+   "新產品（機器狗電池）量產測試結果"
+  ],
+  "terms": [
+   {
+    "term": "PVC",
+    "plain": "聚氯乙烯，一種常見的塑膠材料，用於管材、建材等",
+    "url": "https://zh.wikipedia.org/zh-tw/%E8%81%9A%E6%B0%AF%E4%B9%99%E7%83%AF",
+    "url_label": "維基百科"
+   },
+   {
+    "term": "儲能電池",
+    "plain": "可儲存電能的電池，常用於太陽能、風電等間歇性能源的平衡",
+    "url": "https://zh.wikipedia.org/w/index.php?search=%E5%84%B2%E8%83%BD%E9%9B%BB%E6%B1%A0&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "AI",
+    "plain": "人工智慧，利用演算法讓機器具備學習與判斷能力，應用在製造與能源管理上",
+    "url": "https://zh.wikipedia.org/zh-tw/AI",
+    "url_label": "維基百科"
+   }
+  ]
+ },
+ "sources": [
+  {
+   "label": "證交所／櫃買中心公司基本資料（OpenAPI）",
+   "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  {
+   "label": "維基百科：台塑企業",
+   "url": "https://zh.wikipedia.org/zh-tw/%E5%8F%B0%E5%A1%91%E4%BC%81%E6%A5%AD"
+  },
+  {
+   "label": "鉅亨網 2026-10-14：〈智慧能源週〉台塑新智能攜手綠捷跨足機器狗電池開發 彰濱二期廠力拚2028年Q2量產",
+   "url": "https://news.cnyes.com/news/id/6630445"
+  },
+  {
+   "label": "鉅亨網 2026-10-14：〈台股盤後〉台塑四寶、被動元件撐盤 尾盤摜壓漲點收斂至284點",
+   "url": "https://news.cnyes.com/news/id/6630156"
+  },
+  {
+   "label": "鉅亨網 2026-10-14：〈焦點股〉塑化族群紅光滿面 台塑、台化亮燈漲停 南亞寫新天價",
+   "url": "https://news.cnyes.com/news/id/6624736"
+  },
+  {
+   "label": "鉅亨網 2026-10-13：鉅亨速報 - Factset 最新調查：台塑化(6505-TW)目標價調升至115元，幅度約6.48%",
+   "url": "https://news.cnyes.com/news/id/6629722"
+  },
+  {
+   "label": "鉅亨網 2026-10-13：鉅亨速報 - Factset 最新調查：台塑化(6505-TW)EPS預估上修至9.01元，預估目標價為110元",
+   "url": "https://news.cnyes.com/news/id/6629643"
+  },
+  {
+   "label": "台塑 官方網站",
+   "url": "http://www.fpc.com.tw"
+  }
+ ],
+ "dropped_sentences": 2,
+ "why": {
+  "digest_mentions": 20,
+  "news_7d": 5,
+  "weekly": false,
+  "supply": false
+ },
+ "snapshot": {
+  "close": 88.9,
+  "rev_yoy": 7.1,
+  "rev_month": "2026-09",
+  "gross": 8.44,
+  "pe": 54.21,
+  "yield": 0.56
+ },
+ "generated_at": "2026-10-15T11:49+08:00",
+ "emailed_at": "2026-10-15T11:49+08:00"
+}

@@ -1,0 +1,141 @@
+{
+ "date": "2026-10-18",
+ "code": "2409",
+ "name": "友達",
+ "market": "上市",
+ "industry": "光電業",
+ "story": {
+  "title": "友達光電怎麼從面板起家，現在又在玩什麼新事業？",
+  "one_liner": "友達從TFT‑LCD面板起家，併購與綠能布局讓它成為多元顯示與能源解決方案供應商。",
+  "industry": "友達是TFT‑LCD面板的設計、製造與研發公司，產品涵蓋手機、電視、車載與工業顯示；上游是玻璃、背光與驅動IC，下游客戶包括蘋果、三星等品牌；同業競爭者以群創為主，近年也向太陽能與智慧照護擴展。",
+  "history": [
+   {
+    "when": "1996",
+    "what": "以達碁科技名義成立，開始研發TFT‑LCD面板。"
+   },
+   {
+    "when": "2001",
+    "what": "與聯友光電合併，更名為友達光電，擴大產能。"
+   },
+   {
+    "when": "2006",
+    "what": "併購廣輝電子，取得完整的3.5代至8.5代面板生產線。"
+   },
+   {
+    "when": "2008",
+    "what": "正式進軍綠能產業，提供高效率太陽能模組與電廠服務。"
+   },
+   {
+    "when": "2024",
+    "what": "併購德國Behr‑Hella Thermocontrol，成立友達智慧移動子公司。"
+   },
+   {
+    "when": "2026",
+    "what": "增設創新研究院，持續投入顯示與能源新技術。"
+   }
+  ],
+  "now": [
+   "2026‑10‑08：公布9月營收234.04億台幣，較去年同期下降4.26%。",
+   "2026‑10‑10：外資連續賣超友達，顯示短期資金流向偏空。",
+   "2026‑10‑17：董事長彭雙浪說明集團正向「類控股」架構轉型，培養子公司成長動能。"
+  ],
+  "opportunities": [
+   "綠能事業持續擴大，太陽能模組與電廠建置有長期需求。",
+   "智慧移動與AI應用結合顯示技術，可開拓車載與工業4IR市場。",
+   "新成立的創新研究院有望推出Micro‑LED與柔性顯示新產品。"
+  ],
+  "risks": [
+   "面板需求受季節與宏觀經濟波動影響，營收成長可能放緩。",
+   "外資持續賣超，資金面波動或加大股價波動。",
+   "綠能與AI投資成本高，若技術或市場驗證不如預期，回報可能受限。"
+  ],
+  "watch": [
+   "2026年全年營收與毛利率走勢，觀察是否回升。",
+   "新產品（如Micro‑LED）量產進度與客戶訂單情形。",
+   "公司法說會與永續報告，檢視綠能與智慧照護的實際營運成果。"
+  ],
+  "terms": [
+   {
+    "term": "TFT‑LCD",
+    "plain": "薄膜電晶體液晶顯示器，是目前最普遍的平面顯示技術。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=TFT%E2%80%91LCD&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "Micro‑LED",
+    "plain": "微型發光二極體顯示技術，亮度高、能耗低，被視為未來顯示趨勢。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=Micro%E2%80%91LED&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "類控股架構",
+    "plain": "公司以多個子公司形式運作，讓各事業部門更具彈性與獨立性。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=%E9%A1%9E%E6%8E%A7%E8%82%A1%E6%9E%B6%E6%A7%8B&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "RE100",
+    "plain": "企業承諾使用100%再生能源的全球倡議。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=RE100&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "4IR",
+    "plain": "第四次工業革命，涵蓋AI、物聯網、智慧製造等新技術。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=4IR&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   }
+  ]
+ },
+ "sources": [
+  {
+   "label": "證交所／櫃買中心公司基本資料（OpenAPI）",
+   "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  {
+   "label": "維基百科：友達光電",
+   "url": "https://zh.wikipedia.org/zh-tw/%E5%8F%8B%E9%81%94%E5%85%89%E9%9B%BB"
+  },
+  {
+   "label": "鉅亨網 2026-10-17：〈友達運動會〉彭双浪：集團朝「類控股」架構轉型 培養小老虎盼成大老虎",
+   "url": "https://news.cnyes.com/news/id/6632739"
+  },
+  {
+   "label": "鉅亨網 2026-10-17：〈友達運動會〉彭双浪：AI成長率趨緩不代表泡沫 明年景氣不會差、台股5萬點以上可期",
+   "url": "https://news.cnyes.com/news/id/6632662"
+  },
+  {
+   "label": "鉅亨網 2026-10-10：群創 vs 友達 買誰才會漲？超馬芭樂拆解法人籌碼：外資天天在演戲！「這檔」拉回才是真買點",
+   "url": "https://news.cnyes.com/news/id/6627349"
+  },
+  {
+   "label": "鉅亨網 2026-10-08：外資連假前提款758億元 大砍00406A、友達及鴻海",
+   "url": "https://news.cnyes.com/news/id/6625823"
+  },
+  {
+   "label": "鉅亨網 2026-10-08：友達9月營收234.04億元年減4.26% 1—9月達2067.98億元",
+   "url": "https://news.cnyes.com/news/id/6625295"
+  },
+  {
+   "label": "友達 官方網站",
+   "url": "https://www.auo.com"
+  }
+ ],
+ "dropped_sentences": 0,
+ "why": {
+  "digest_mentions": 10,
+  "news_7d": 2,
+  "weekly": false,
+  "supply": false
+ },
+ "snapshot": {
+  "close": 35.9,
+  "rev_yoy": -4.3,
+  "rev_month": "2026-09",
+  "gross": 12.46,
+  "pe": 149.58,
+  "yield": 1.11
+ },
+ "generated_at": "2026-10-18T08:33+08:00",
+ "emailed_at": "2026-10-18T13:18+08:00"
+}

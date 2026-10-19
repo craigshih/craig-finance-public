@@ -1,0 +1,43 @@
+<section class="hero adv-hero"><div class="wrap">
+  <div class="kicker">{{KICKER}}・選股機器人</div>
+  <h1>不知道要問哪一檔？<br>說說你的想法就好</h1>
+  <p class="hero-sub">例如「想趁大跌進場，買龍頭股或金融股」：AI 先把你的話翻成條件，再用固定規則從全市場資料挑出研究候選，最後說明每一檔為什麼符合。</p>
+  <div class="adv-pipe">
+    <div><b>1</b><span>理解情境</span><small>AI 把一句話翻成條件</small></div>
+    <div><b>2</b><span>規則選股</span><small>產業、龍頭、跌深、估值、配息</small></div>
+    <div><b>3</b><span>分散</span><small>同產業最多 2 檔</small></div>
+    <div><b>4</b><span>說明理由</span><small>只引用資料裡的數字</small></div>
+  </div>
+</div></section>
+{{TABS}}
+<nav class="adv-sub" aria-label="顧問功能"><div class="wrap"><a href="../">問個股</a><a class="on" href="./">幫我找股票</a></div></nav>
+<main class="wrap" id="fd-app" data-api="{{API}}" data-advisor="../">
+  <section class="sec">
+    <form class="adv-ask" id="fd-form">
+      <textarea id="fd-q" rows="2" maxlength="300" placeholder="例如：我想趁大跌進場，想買龍頭股，可能像是聯發科、日月光，或是其他金融股" required></textarea>
+      <button class="btn" type="submit" id="fd-send">幫我找</button>
+    </form>
+    <div class="adv-sugg" id="fd-sugg">
+      <button type="button" class="chip" data-fq="想趁大跌進場，找各產業的龍頭股">想趁大跌找龍頭股</button>
+      <button type="button" class="chip" data-fq="想存股，找殖利率高、獲利穩定的金融股">存股：高殖利率金融股</button>
+      <button type="button" class="chip" data-fq="找營收成長快、毛利率高的半導體股">成長型半導體</button>
+      <button type="button" class="chip" data-fq="找本益比低、波動小的穩健股票">便宜又穩健</button>
+      <button type="button" class="chip" data-fq="AI 伺服器供應鏈裡，最近跌比較多的龍頭">AI 供應鏈跌深龍頭</button>
+    </div>
+    <p class="adv-meta">資料日期 {{DATA_DATE}}・{{SCOPE}}</p>
+  </section>
+  <div id="fd-out"></div>
+  <p class="obs-disclaimer">挑出來的是「符合你描述條件的研究候選」，不是買進建議；規則和資料都可能有盲點，進場前請自己再研究，並控制部位大小。</p>
+  <section class="legal" aria-label="免責聲明">
+    <h2>免責聲明</h2>
+    <ol>
+      <li>本頁內容由 AI 程式依公開資料自動產生，僅供個人學習與研究參考，<b>不構成任何投資建議、要約、招攬或推薦</b>，也不保證任何報酬。</li>
+      <li>本站站長與本網站<b>不是證券投資顧問事業</b>，未持有投顧執照，不提供個別化的投資建議或代客操作。</li>
+      <li>AI 可能誤讀資料、計算錯誤或產生不正確的內容；行情、財報、新聞等資料也可能延遲、缺漏或有誤。站長不保證內容的正確性、完整性與即時性。</li>
+      <li>回測與風險指標都是用歷史資料計算，<b>過去表現不代表未來結果</b>。</li>
+      <li>投資一定有風險，可能損失全部本金。您依本頁內容所做的任何決定與交易，由您自行判斷並<b>自負盈虧與一切責任</b>；站長與本網站對任何直接或間接損失<b>不負任何賠償或法律責任</b>。</li>
+      <li>請勿在問題中輸入個人隱私、帳號密碼或其他敏感資訊。使用本頁即表示您已閱讀並同意以上聲明。</li>
+    </ol>
+  </section>
+</main>
+<script src="finder.js" defer></script>

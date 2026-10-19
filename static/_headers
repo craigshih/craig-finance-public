@@ -1,0 +1,15 @@
+/*
+  Cache-Control: no-cache
+  X-Robots-Tag: noindex, nofollow
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+
+/portfolio/*
+  Cache-Control: private, no-store
+/api/*
+  Cache-Control: no-store
+/feed/*
+  Cache-Control: public, max-age=300
+  Access-Control-Allow-Origin: *
+  Content-Type: application/json; charset=utf-8

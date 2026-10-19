@@ -1,0 +1,542 @@
+[
+{
+"date": "2026-07-22",
+"foreign": 173.4,
+"trust": 189.0,
+"dealer": -24.0,
+"total": 338.5,
+"margin_yi": 5828.2,
+"margin_chg_yi": 63.3
+},
+{
+"date": "2026-07-23",
+"foreign": 69.6,
+"trust": 73.7,
+"dealer": 41.9,
+"total": 185.2,
+"margin_yi": 5826.3,
+"margin_chg_yi": -2.0
+},
+{
+"date": "2026-07-24",
+"foreign": -609.5,
+"trust": 47.6,
+"dealer": -111.5,
+"total": -673.4,
+"margin_yi": 5770.6,
+"margin_chg_yi": -55.7
+},
+{
+"date": "2026-07-27",
+"foreign": 80.4,
+"trust": 4.8,
+"dealer": -78.6,
+"total": 6.6,
+"margin_yi": 5686.6,
+"margin_chg_yi": -84.0
+},
+{
+"date": "2026-07-28",
+"foreign": -874.8,
+"trust": 16.1,
+"dealer": -317.3,
+"total": -1176.0,
+"margin_yi": 5455.3,
+"margin_chg_yi": -231.3
+},
+{
+"date": "2026-07-29",
+"foreign": -222.5,
+"trust": 57.1,
+"dealer": -186.0,
+"total": -351.5,
+"margin_yi": 5070.1,
+"margin_chg_yi": -385.2
+},
+{
+"date": "2026-07-30",
+"foreign": -483.1,
+"trust": 140.0,
+"dealer": -152.3,
+"total": -495.4,
+"margin_yi": 4938.7,
+"margin_chg_yi": -131.4
+},
+{
+"date": "2026-07-31",
+"foreign": 675.5,
+"trust": 360.2,
+"dealer": -162.6,
+"total": 873.1,
+"margin_yi": 5074.6,
+"margin_chg_yi": 136.0
+},
+{
+"date": "2026-08-03",
+"foreign": -191.9,
+"trust": 233.2,
+"dealer": -206.5,
+"total": -165.2,
+"margin_yi": 5147.6,
+"margin_chg_yi": 72.9
+},
+{
+"date": "2026-08-04",
+"foreign": -57.3,
+"trust": 271.7,
+"dealer": -194.3,
+"total": 20.0,
+"margin_yi": 5211.3,
+"margin_chg_yi": 63.8
+},
+{
+"date": "2026-08-05",
+"foreign": 903.1,
+"trust": 112.7,
+"dealer": 14.6,
+"total": 1030.3,
+"margin_yi": 5234.9,
+"margin_chg_yi": 23.6
+},
+{
+"date": "2026-08-06",
+"foreign": 20.2,
+"trust": 94.1,
+"dealer": -63.1,
+"total": 51.2,
+"margin_yi": 5328.0,
+"margin_chg_yi": 93.1
+},
+{
+"date": "2026-08-07",
+"foreign": -407.2,
+"trust": -12.0,
+"dealer": -9.7,
+"total": -428.9,
+"margin_yi": 5376.6,
+"margin_chg_yi": 48.6
+},
+{
+"date": "2026-08-10",
+"foreign": 517.4,
+"trust": 34.0,
+"dealer": 184.7,
+"total": 736.1,
+"margin_yi": 5453.0,
+"margin_chg_yi": 76.3
+},
+{
+"date": "2026-08-11",
+"foreign": 223.3,
+"trust": 32.2,
+"dealer": 24.6,
+"total": 280.1,
+"margin_yi": 5441.5,
+"margin_chg_yi": -11.4
+},
+{
+"date": "2026-08-12",
+"foreign": 110.2,
+"trust": 22.8,
+"dealer": 87.0,
+"total": 220.0,
+"margin_yi": 5480.8,
+"margin_chg_yi": 39.3
+},
+{
+"date": "2026-08-13",
+"foreign": 756.9,
+"trust": -15.0,
+"dealer": 150.6,
+"total": 892.5,
+"margin_yi": 5497.8,
+"margin_chg_yi": 17.0
+},
+{
+"date": "2026-08-14",
+"foreign": 453.5,
+"trust": 79.7,
+"dealer": -16.6,
+"total": 516.6,
+"margin_yi": 5470.6,
+"margin_chg_yi": -27.2
+},
+{
+"date": "2026-08-17",
+"foreign": 454.5,
+"trust": -177.8,
+"dealer": 14.1,
+"total": 290.8,
+"margin_yi": 5501.0,
+"margin_chg_yi": 30.4
+},
+{
+"date": "2026-08-18",
+"foreign": -119.9,
+"trust": 38.3,
+"dealer": -176.1,
+"total": -257.7,
+"margin_yi": 5470.1,
+"margin_chg_yi": -30.9
+},
+{
+"date": "2026-08-19",
+"foreign": -416.4,
+"trust": -166.0,
+"dealer": -171.2,
+"total": -753.6,
+"margin_yi": 5481.9,
+"margin_chg_yi": 11.8
+},
+{
+"date": "2026-08-20",
+"foreign": 73.2,
+"trust": -20.5,
+"dealer": -61.1,
+"total": -8.4,
+"margin_yi": 5484.1,
+"margin_chg_yi": 2.2
+},
+{
+"date": "2026-08-21",
+"foreign": 283.1,
+"trust": 21.0,
+"dealer": 29.2,
+"total": 333.3,
+"margin_yi": 5469.4,
+"margin_chg_yi": -14.7
+},
+{
+"date": "2026-08-24",
+"foreign": -157.4,
+"trust": 30.5,
+"dealer": -43.3,
+"total": -170.1,
+"margin_yi": 5452.6,
+"margin_chg_yi": -16.8
+},
+{
+"date": "2026-08-25",
+"foreign": -7.9,
+"trust": -39.8,
+"dealer": 0.6,
+"total": -47.1,
+"margin_yi": 5469.4,
+"margin_chg_yi": 16.8
+},
+{
+"date": "2026-08-26",
+"foreign": 366.1,
+"trust": 33.7,
+"dealer": 179.3,
+"total": 579.1,
+"margin_yi": 5548.0,
+"margin_chg_yi": 78.6
+},
+{
+"date": "2026-08-27",
+"foreign": 490.9,
+"trust": -14.5,
+"dealer": 150.4,
+"total": 626.8,
+"margin_yi": 5599.2,
+"margin_chg_yi": 51.2
+},
+{
+"date": "2026-08-28",
+"foreign": 417.5,
+"trust": -2.0,
+"dealer": 42.7,
+"total": 458.3,
+"margin_yi": 5671.8,
+"margin_chg_yi": 72.6
+},
+{
+"date": "2026-08-31",
+"foreign": -143.9,
+"trust": -40.0,
+"dealer": -74.5,
+"total": -258.5,
+"margin_yi": 5698.8,
+"margin_chg_yi": 27.0
+},
+{
+"date": "2026-09-01",
+"foreign": 267.1,
+"trust": 136.0,
+"dealer": 163.3,
+"total": 566.4,
+"margin_yi": 5781.2,
+"margin_chg_yi": 82.4
+},
+{
+"date": "2026-09-02",
+"foreign": -913.5,
+"trust": -35.3,
+"dealer": -203.6,
+"total": -1152.4,
+"margin_yi": 5856.8,
+"margin_chg_yi": 75.6
+},
+{
+"date": "2026-09-03",
+"foreign": -481.5,
+"trust": 6.9,
+"dealer": -167.1,
+"total": -641.6,
+"margin_yi": 5787.4,
+"margin_chg_yi": -69.4
+},
+{
+"date": "2026-09-04",
+"foreign": 562.1,
+"trust": -9.1,
+"dealer": 63.7,
+"total": 616.7,
+"margin_yi": 5818.9,
+"margin_chg_yi": 31.6
+},
+{
+"date": "2026-09-07",
+"foreign": 883.1,
+"trust": 87.2,
+"dealer": 156.9,
+"total": 1127.2,
+"margin_yi": 5882.7,
+"margin_chg_yi": 63.8
+},
+{
+"date": "2026-09-08",
+"foreign": 132.7,
+"trust": -72.4,
+"dealer": -185.4,
+"total": -125.1,
+"margin_yi": 5862.7,
+"margin_chg_yi": -20.0
+},
+{
+"date": "2026-09-09",
+"foreign": 209.2,
+"trust": 20.8,
+"dealer": -18.8,
+"total": 211.3,
+"margin_yi": 5871.7,
+"margin_chg_yi": 9.0
+},
+{
+"date": "2026-09-10",
+"foreign": -383.3,
+"trust": 33.5,
+"dealer": -137.6,
+"total": -487.5,
+"margin_yi": 5919.0,
+"margin_chg_yi": 47.3
+},
+{
+"date": "2026-09-11",
+"foreign": -892.7,
+"trust": 82.1,
+"dealer": -302.0,
+"total": -1112.6,
+"margin_yi": 5878.7,
+"margin_chg_yi": -40.3
+},
+{
+"date": "2026-09-14",
+"foreign": -369.6,
+"trust": 37.0,
+"dealer": -150.9,
+"total": -483.6,
+"margin_yi": 5838.8,
+"margin_chg_yi": -39.9
+},
+{
+"date": "2026-09-15",
+"foreign": -627.0,
+"trust": -19.9,
+"dealer": -142.1,
+"total": -789.0,
+"margin_yi": 5822.4,
+"margin_chg_yi": -16.4
+},
+{
+"date": "2026-09-16",
+"foreign": -179.8,
+"trust": 106.5,
+"dealer": -129.7,
+"total": -203.1,
+"margin_yi": 5861.7,
+"margin_chg_yi": 39.3
+},
+{
+"date": "2026-09-17",
+"foreign": 121.9,
+"trust": 117.0,
+"dealer": 15.8,
+"total": 254.7,
+"margin_yi": 5894.0,
+"margin_chg_yi": 32.3
+},
+{
+"date": "2026-09-18",
+"foreign": 869.9,
+"trust": 81.5,
+"dealer": 243.0,
+"total": 1194.5,
+"margin_yi": 5940.4,
+"margin_chg_yi": 46.4
+},
+{
+"date": "2026-09-21",
+"foreign": 204.8,
+"trust": 46.0,
+"dealer": 227.3,
+"total": 478.0,
+"margin_yi": 6030.4,
+"margin_chg_yi": 90.0
+},
+{
+"date": "2026-09-22",
+"foreign": 453.2,
+"trust": -3.7,
+"dealer": 158.5,
+"total": 608.1,
+"margin_yi": 6048.6,
+"margin_chg_yi": 18.2
+},
+{
+"date": "2026-09-23",
+"foreign": 373.1,
+"trust": -47.6,
+"dealer": 58.2,
+"total": 383.8,
+"margin_yi": 6063.7,
+"margin_chg_yi": 15.1
+},
+{
+"date": "2026-09-24",
+"foreign": -329.6,
+"trust": -128.2,
+"dealer": 13.4,
+"total": -444.5,
+"margin_yi": 6151.0,
+"margin_chg_yi": 87.4
+},
+{
+"date": "2026-09-29",
+"foreign": -625.8,
+"trust": 5.8,
+"dealer": -164.0,
+"total": -784.1,
+"margin_yi": 6186.5,
+"margin_chg_yi": 35.5
+},
+{
+"date": "2026-09-30",
+"foreign": 308.6,
+"trust": 82.9,
+"dealer": 12.4,
+"total": 403.9,
+"margin_yi": 6222.5,
+"margin_chg_yi": 36.0
+},
+{
+"date": "2026-10-01",
+"foreign": 219.4,
+"trust": 58.7,
+"dealer": 16.6,
+"total": 294.6,
+"margin_yi": 6298.7,
+"margin_chg_yi": 75.7
+},
+{
+"date": "2026-10-02",
+"foreign": 26.2,
+"trust": 57.7,
+"dealer": 20.3,
+"total": 104.2,
+"margin_yi": 6351.0,
+"margin_chg_yi": 52.4
+},
+{
+"date": "2026-10-05",
+"foreign": 719.0,
+"trust": -52.9,
+"dealer": 109.5,
+"total": 775.5,
+"margin_yi": 6333.5,
+"margin_chg_yi": -17.5
+},
+{
+"date": "2026-10-06",
+"foreign": -66.6,
+"trust": -142.6,
+"dealer": 17.2,
+"total": -192.0,
+"margin_yi": 6376.6,
+"margin_chg_yi": 43.1
+},
+{
+"date": "2026-10-07",
+"foreign": -130.4,
+"trust": -33.2,
+"dealer": -78.0,
+"total": -241.6,
+"margin_yi": 6400.0,
+"margin_chg_yi": 23.4
+},
+{
+"date": "2026-10-08",
+"foreign": -758.5,
+"trust": 30.1,
+"dealer": -187.3,
+"total": -915.7,
+"margin_yi": 6464.1,
+"margin_chg_yi": 64.0
+},
+{
+"date": "2026-10-12",
+"foreign": -522.0,
+"trust": 71.4,
+"dealer": -142.9,
+"total": -593.5,
+"margin_yi": 6533.3,
+"margin_chg_yi": 69.2
+},
+{
+"date": "2026-10-13",
+"foreign": -1652.9,
+"trust": 246.3,
+"dealer": -569.8,
+"total": -1976.4,
+"margin_yi": 6449.8,
+"margin_chg_yi": -83.5
+},
+{
+"date": "2026-10-14",
+"foreign": -200.4,
+"trust": 160.3,
+"dealer": -114.7,
+"total": -154.8,
+"margin_yi": 6515.7,
+"margin_chg_yi": 65.9
+},
+{
+"date": "2026-10-15",
+"foreign": -3025.6,
+"trust": 292.8,
+"dealer": -958.2,
+"total": -3691.0,
+"margin_yi": 6464.2,
+"margin_chg_yi": -51.4
+},
+{
+"date": "2026-10-16",
+"foreign": -461.5,
+"trust": 110.5,
+"dealer": -334.1,
+"total": -685.1,
+"margin_yi": 6455.9,
+"margin_chg_yi": -8.2
+}
+]

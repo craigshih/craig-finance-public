@@ -1,0 +1,97 @@
+<section class="hero sim-hero"><div class="wrap">
+  <div class="kicker">模擬交易・虛擬新台幣</div>
+  <div class="sim-account">
+    <div class="sim-total-box">
+      <small>總資產</small>
+      <h1 id="sim-total">—</h1>
+      <p class="hero-sub" id="sim-total-sub">讀取帳戶中…</p>
+      <span class="sim-status" id="sim-status"></span>
+    </div>
+    <svg class="sim-equity" id="sim-equity" viewBox="0 0 300 80" preserveAspectRatio="none" aria-label="總資產走勢"></svg>
+  </div>
+  <div class="sim-tiles" id="sim-tiles"></div>
+  <div class="sim-board">
+    <div class="sim-board-head"><b><img class="ui-ico sm" src="/ui/trophy.svg" alt=""> 排行榜</b><small id="sim-board-note">依總資產排序，只顯示暱稱</small></div>
+    <ol id="sim-board"></ol>
+  </div>
+</div></section>
+
+<nav class="sim-tabs" id="sim-tabs" aria-label="模擬交易分頁"><div class="wrap">
+  <button type="button" data-tab="trade" class="on">下單</button>
+  <button type="button" data-tab="holdings">持股 <b id="n-holdings"></b></button>
+  <button type="button" data-tab="watch">自選 <b id="n-watch"></b></button>
+  <button type="button" data-tab="orders">委託 <b id="n-orders"></b></button>
+  <button type="button" data-tab="history">紀錄</button>
+  <button type="button" data-tab="settings">設定</button>
+</div></nav>
+
+<main class="wrap" id="sim-app">
+  <!-- 下單 -->
+  <section class="sim-panel" data-panel="trade">
+    <div class="sim-search">
+      <input id="sim-q" autocomplete="off" placeholder="輸入股票名稱或代號，例如：台積電、2330、元大高股息" aria-label="搜尋股票">
+      <ul class="sim-suggest" id="sim-suggest" role="listbox" hidden></ul>
+    </div>
+    <div class="sim-trade-grid">
+      <div class="sim-stock" id="sim-stock">
+        <div class="sim-empty">
+          <p>搜尋一檔股票，這裡會顯示走勢、均線、成交量與「四指標體檢」。</p>
+          <div class="sim-hot" id="sim-hot"></div>
+        </div>
+      </div>
+      <form class="sim-ticket" id="sim-form">
+        <div class="seg-toggle" id="sim-side"><button type="button" data-side="buy">買進</button><button type="button" data-side="sell">賣出</button></div>
+        <div class="sim-ticket-stock" id="sim-ticket-stock"><span class="muted">先搜尋股票</span></div>
+        <div class="seg-mini" id="sim-type"><button type="button" data-type="market" class="on">市價</button><button type="button" data-type="limit">限價</button></div>
+        <label for="sim-limit" class="lim">委託價</label>
+        <div class="stepper lim"><button type="button" data-step="-1">−</button><input id="sim-limit" type="number" step="0.01" inputmode="decimal"><button type="button" data-step="1">＋</button></div>
+        <label for="sim-shares">股數 <small id="sim-maxbuy"></small></label>
+        <div class="stepper"><button type="button" data-shares="-1">−</button><input id="sim-shares" type="number" min="1" step="1" inputmode="numeric" placeholder="1 張 = 1,000 股"><button type="button" data-shares="1">＋</button></div>
+        <div class="quick"><button type="button" class="btn ghost" data-lots="0.1">100 股</button><button type="button" class="btn ghost" data-lots="1">1 張</button><button type="button" class="btn ghost" data-lots="5">5 張</button><button type="button" class="btn ghost" data-frac="1">全部</button></div>
+        <div class="estimate" id="sim-estimate"></div>
+        <button type="submit" class="btn buy" id="sim-submit">送出買單</button>
+        <p class="sim-note" id="sim-note"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- 持股 -->
+  <section class="sim-panel" data-panel="holdings" hidden>
+    <div class="sim-alloc" id="sim-alloc"></div>
+    <div class="sim-cards" id="sim-holdings"></div>
+  </section>
+
+  <!-- 自選 -->
+  <section class="sim-panel" data-panel="watch" hidden>
+    <p class="sim-note">在股票資訊卡按星星加入自選；這裡會顯示即時報價與四指標體檢結果。</p>
+    <div class="sim-cards" id="sim-watch"></div>
+  </section>
+
+  <!-- 委託 -->
+  <section class="sim-panel" data-panel="orders" hidden>
+    <ul class="feed" id="sim-orders"></ul>
+  </section>
+
+  <!-- 紀錄 -->
+  <section class="sim-panel" data-panel="history" hidden>
+    <ul class="feed" id="sim-trades"></ul>
+  </section>
+
+  <!-- 設定與規則 -->
+  <section class="sim-panel" data-panel="settings" hidden>
+    <form class="card-form" id="sim-nick-form"><label for="sim-nickname">排行榜暱稱</label>
+      <div class="row-input"><input id="sim-nickname" maxlength="20"><button type="submit" class="btn ghost">儲存</button></div>
+    </form>
+    <button type="button" class="btn danger" id="sim-reset">重新開始</button>
+    <ul class="rules">
+      <li>每人虛擬資金 NT$1,000,000，可交易上市、上櫃股票與 ETF，零股也可以。</li>
+      <li>盤中（平日 09:00～13:30）以證交所即時成交價成交；收盤後以最近收盤價成交。</li>
+      <li>限價單：買進在價格 ≤ 委託價、賣出在價格 ≥ 委託價時成交，當天 13:30 前沒成交自動取消；收盤後下的單留到下一個交易日。</li>
+      <li>手續費 0.1425% 無條件捨去，整股最低 20 元、零股最低 1 元；賣出另收證交稅：股票 0.3%、ETF 0.1%、債券 ETF 免徵。</li>
+      <li>不能融資、融券或放空，只能賣出自己持有的股數。</li>
+      <li>「四指標體檢」依圖卡〈炒股越久越簡單〉的規則自動判斷，只是學習用，不構成投資建議。</li>
+    </ul>
+  </section>
+</main>
+<div class="toast" id="sim-toast" role="status" aria-live="polite"></div>
+<script src="../sim.js" defer></script>

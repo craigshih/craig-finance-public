@@ -1,0 +1,97 @@
+name: Daily pick
+
+# 每日一檔：台北 08:10 挑股票、請 AI 寫介紹並更新網站；09:02 寄信（GitHub 排程常會晚幾分鐘到半小時）。
+# 寄信那次如果發現早上沒產生成功，會先補產生再寄；同一天只會寄一封（存檔裡記了 emailed_at）。
+on:
+  schedule:
+    - cron: "10 0 * * *"    # 台北 08:10 產生
+    - cron: "2 1 * * *"     # 台北 09:02 寄信
+    - cron: "40 1 * * *"    # 台北 09:40 備援：還沒寄出就補寄
+  workflow_dispatch:
+    inputs:
+      send:
+        description: "產生後立刻寄信"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: daily-pick
+  cancel-in-progress: false
+
+jobs:
+  pick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: craigshih/Tim-Lu
+          token: ${{ secrets.SOURCES_TOKEN }}
+          path: sources/tim-lu
+          sparse-checkout: data/digests
+
+      - uses: actions/checkout@v4
+        with:
+          repository: craigshih/investment-team
+          token: ${{ secrets.SOURCES_TOKEN }}
+          path: sources/investment-team
+          sparse-checkout: data/reports
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      # LINE：查出已開通的群組（存在 D1，機器人被邀進群組時由 webhook 寫入）
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install -g wrangler@3
+      - name: LINE groups
+        id: line
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          ids=$(bash scripts/d1.sh "SELECT group_id FROM line_groups WHERE approved = 1 AND active = 1" | jq -r '[.[].group_id] | join(",")' || true)
+          echo "::add-mask::$ids"
+          echo "ids=$ids" >> "$GITHUB_OUTPUT"
+          echo "LINE 群組：$(echo "$ids" | tr ',' '\n' | grep -c . || true) 個"
+
+      - name: Pick and write (and send at 09:00)
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_GROUP_IDS: ${{ steps.line.outputs.ids }}
+          SEND: ${{ (github.event.schedule == '2 1 * * *' || github.event.schedule == '40 1 * * *' || inputs.send) && '1' || '0' }}
+        run: python daily_pick.py
+
+      - name: Commit
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/daily_pick/
+          if git diff --cached --quiet; then echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          git commit -m "daily pick: $(TZ=Asia/Taipei date +%F)"
+          # 資料檔每次都重新產生：撞到別的執行剛推上去的版本時，以這次的為準（-X theirs）；失敗就整個退回，不留下衝突標記
+          for i in 1 2 3; do git fetch -q origin main && { git rebase -q -X theirs origin/main || { git rebase --abort; false; }; } && git push -q && break; sleep $((i * 5)); done
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # 用 GITHUB_TOKEN 推上去的 commit 不會觸發其他 workflow，所以直接叫網站重建
+      - name: Rebuild site
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build.yml

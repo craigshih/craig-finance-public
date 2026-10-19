@@ -1,0 +1,124 @@
+{
+ "date": "2026-10-16",
+ "code": "4958",
+ "name": "臻鼎-KY",
+ "market": "上市",
+ "industry": "電子零組件業",
+ "story": {
+  "title": "臻鼎KY營收狂飆 36% 為什麼？",
+  "one_liner": "從 PCB 供應商起家到 AI 伺服器關鍵零件，臻鼎KY正快速擴張。",
+  "industry": "臻鼎KY屬於電子零組件業，主要製造印刷電路板（PCB）與高階光模組、IC 載板。上游是半導體晶圓與光學元件供應商，下游客戶包括 Apple、伺服器廠商與 AI 計算平台。競爭者有欣興、南電、景碩等。",
+  "history": [
+   {
+    "when": "2006",
+    "what": "成立於桃園，開始提供 iPhone PCB 給 Apple。"
+   },
+   {
+    "when": "2025",
+    "what": "動工臻鼎時代大廈，預計 2028 年啟用作為總部。"
+   },
+   {
+    "when": "2026",
+    "what": "9 月營收 263.58 億，年增 36.1%，創單月新高。"
+   }
+  ],
+  "now": [
+   "子公司慶鼎精密在中國淮安取得新機器設備，提升產能。",
+   "子公司 PENG SHEN TECHNOLOGY (THAILAND) 也添購設備，擴大東南亞布局。",
+   "9 月營收創歷史新高，伺服器、光模塊、IC 載板營收年增逾 3 倍。"
+  ],
+  "opportunities": [
+   "AI 伺服器需求持續成長，帶動高階 PCB 與光模組訂單。",
+   "高速光模塊在資料中心與 5G 基站的應用擴大。",
+   "東南亞產能擴張降低供應鏈風險，提升國際競爭力。"
+  ],
+  "risks": [
+   "原物料價格波動可能壓縮毛利率。",
+   "主要客戶 Apple 訂單變化對營收影響大。",
+   "新建臻鼎時代大廈若延遲，資金成本可能上升。"
+  ],
+  "watch": [
+   "新機器設備投產進度與產能利用率。",
+   "Apple 及其他大客戶的訂單變化。"
+  ],
+  "terms": [
+   {
+    "term": "PCB",
+    "plain": "印刷電路板，用於連接電子元件的基板。",
+    "url": "https://zh.wikipedia.org/zh-tw/PCB",
+    "url_label": "維基百科"
+   },
+   {
+    "term": "光模組",
+    "plain": "光學模組，常用於高速資料傳輸與光通訊。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=%E5%85%89%E6%A8%A1%E7%B5%84&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "IC 載板",
+    "plain": "集成電路載板，支撐晶片並提供電氣連接。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=IC%20%E8%BC%89%E6%9D%BF&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   }
+  ]
+ },
+ "sources": [
+  {
+   "label": "證交所／櫃買中心公司基本資料（OpenAPI）",
+   "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  {
+   "label": "維基百科：臻鼎時代大廈",
+   "url": "https://zh.wikipedia.org/zh-tw/%E8%87%BB%E9%BC%8E%E6%99%82%E4%BB%A3%E5%A4%A7%E5%BB%88"
+  },
+  {
+   "label": "鉅亨網 2026-10-15：鉅亨速報 - Factset 最新調查：臻鼎-KY(4958-TW)EPS預估上修至14.23元，預估目標價為671.5元",
+   "url": "https://news.cnyes.com/news/id/6631542"
+  },
+  {
+   "label": "鉅亨網 2026-10-15：臻鼎-KY:代子公司慶鼎精密電子(淮安)有限公司公告取得機器設備",
+   "url": "https://news.cnyes.com/news/id/6631748"
+  },
+  {
+   "label": "鉅亨網 2026-10-12：鴻海處分臻鼎持股5544張 均價584.96元獲利26.83億元",
+   "url": "https://news.cnyes.com/news/id/6628411"
+  },
+  {
+   "label": "鉅亨網 2026-10-12：臻鼎-KY:代子公司PENG SHEN TECHNOLOGY (THAILAND) CO., LTD.公告取得機器設備",
+   "url": "https://news.cnyes.com/news/id/6628744"
+  },
+  {
+   "label": "鉅亨網 2026-10-12：鴻海:(補充115/7/17公告)代子公司Foxconn(Far East)Limited公告處分臻鼎科技控股股份有限公司股份",
+   "url": "https://news.cnyes.com/news/id/6628723"
+  },
+  {
+   "label": "鉅亨網 2026-10-08：臻鼎-KY:代子公司慶鼎精密電子(淮安)有限公司公告取得機器設備",
+   "url": "https://news.cnyes.com/news/id/6626617"
+  },
+  {
+   "label": "聯合報 2026-03-24：iPhone零組件完整曝光 這三家台廠最受矚目",
+   "url": "https://udn.com/news/story/7251/9400072"
+  },
+  {
+   "label": "臻鼎 官方網站",
+   "url": "https://www.zdtco.com"
+  }
+ ],
+ "dropped_sentences": 2,
+ "why": {
+  "digest_mentions": 4,
+  "news_7d": 5,
+  "weekly": false,
+  "supply": true
+ },
+ "snapshot": {
+  "close": 519.0,
+  "rev_yoy": 36.1,
+  "rev_month": "2026-09",
+  "gross": 22.43,
+  "pe": 61.42,
+  "yield": 0.66
+ },
+ "generated_at": "2026-10-16T08:56+08:00",
+ "emailed_at": "2026-10-16T09:10+08:00"
+}

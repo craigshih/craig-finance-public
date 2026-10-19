@@ -1,0 +1,45 @@
+<section class="hero adv-hero"><div class="wrap">
+  <div class="kicker">{{KICKER}}</div>
+  <h1>這檔值不值得？<br>哪一檔比較好？</h1>
+  <p class="hero-sub">籌碼 × 財報 × 輿情，讓「風控派」和「回測派」先辯論，再給你融合後的建言。</p>
+  <div class="adv-pipe" id="adv-pipe">
+    <div><b>1</b><span>多源資料</span><small>法人・營收・毛利・融資・PTT・新聞</small></div>
+    <div><b>2</b><span>AI 解讀</span><small>只引用資料裡的數字</small></div>
+    <div><b>3</b><span>風控 vs 回測</span><small>防守派與進攻派辯論</small></div>
+    <div><b>4</b><span>融合建言</span><small>以風險調整後報酬為核心</small></div>
+  </div>
+</div></section>
+{{TABS}}
+<nav class="adv-sub" aria-label="顧問功能"><div class="wrap"><a class="on" href="./">問個股</a><a href="find/">幫我找股票</a></div></nav>
+<main class="wrap" id="adv-app" data-api="{{API}}" data-hist="{{HIST}}">
+  <section class="sec">
+    <form class="adv-ask" id="adv-form">
+      <textarea id="adv-q" rows="2" maxlength="300" placeholder="例如：台積電還值得長抱嗎？／台積電和聯電哪個比較值得投資？／什麼是最大回撤？" required></textarea>
+      <button class="btn" type="submit" id="adv-send">問顧問</button>
+    </form>
+    <div class="adv-sugg" id="adv-sugg">{{SUGGESTIONS}}</div>
+    <p class="adv-meta">資料日期 {{DATA_DATE}}・涵蓋全市場財報估值，其中 {{PRICED}} 檔另有風控與回測（{{SCOPE}}）</p>
+  </section>
+
+  <div id="adv-out"></div>
+
+  <section class="sec" id="adv-hist-sec" hidden>
+    <div class="sec-head"><h2>最近問過</h2><span class="sec-note">只存在這台裝置的瀏覽器</span><button class="sec-link adv-clear" type="button" id="adv-clear">清除</button></div>
+    <ul class="feed" id="adv-hist"></ul>
+  </section>
+
+  <p class="obs-disclaimer">AI 會出錯、資料也可能延遲；以下內容是 AI 根據公開資料整理的研究意見，不是持牌投顧建議。最後的決定請自己做，並控制部位大小。</p>
+
+  <section class="legal" aria-label="免責聲明">
+    <h2>免責聲明</h2>
+    <ol>
+      <li>本頁內容由 AI 程式依公開資料自動產生，僅供個人學習與研究參考，<b>不構成任何投資建議、要約、招攬或推薦</b>，也不保證任何報酬。</li>
+      <li>本站站長與本網站<b>不是證券投資顧問事業</b>，未持有投顧執照，不提供個別化的投資建議或代客操作。</li>
+      <li>AI 可能誤讀資料、計算錯誤或產生不正確的內容；行情、財報、新聞等資料也可能延遲、缺漏或有誤。站長不保證內容的正確性、完整性與即時性。</li>
+      <li>回測與風險指標都是用歷史資料計算，<b>過去表現不代表未來結果</b>。</li>
+      <li>投資一定有風險，可能損失全部本金。您依本頁內容所做的任何決定與交易，由您自行判斷並<b>自負盈虧與一切責任</b>；站長與本網站對任何直接或間接損失<b>不負任何賠償或法律責任</b>。</li>
+      <li>請勿在問題中輸入個人隱私、帳號密碼或其他敏感資訊。使用本頁即表示您已閱讀並同意以上聲明。</li>
+    </ol>
+  </section>
+</main>
+<script src="advisor.js" defer></script>

@@ -1,0 +1,116 @@
+{
+ "date": "2026-10-19",
+ "code": "6531",
+ "name": "愛普",
+ "market": "上市",
+ "industry": "半導體業",
+ "story": {
+  "title": "愛普營收狂增90%，背後是什麼新技術？",
+  "one_liner": "從2011年起家到2026年營收翻倍，愛普專注高階矽電容與IoT記憶體。",
+  "industry": "愛普屬於半導體業，主要產品為高階矽電容與IoT記憶體（IoTRAM），上游供應矽晶圓與封裝材料，下游客戶為智慧手機、車載系統與物聯網設備製造商，競爭對手包括台積電、聯電等記憶體廠。",
+  "history": [
+   {
+    "when": "2011",
+    "what": "公司於8月成立，定位半導體記憶體設計與製造。"
+   },
+   {
+    "when": "2026",
+    "what": "9月營收達11.89億台幣，年增90.15%。"
+   }
+  ],
+  "now": [
+   "2026-10-14：公布9月營收年增90.15%，矽電容放量、IoTRAM滿載。",
+   "2026-10-13：完成GDR發行，每股898元，募集約4.16億美元支應購料需求。",
+   "2026-10-13：公告現金增資配合海外存託憑證發行條件。"
+  ],
+  "opportunities": [
+   "持續擴大IoT記憶體產能，受益5G與智慧城市需求。",
+   "矽電容技術升級，可進入車用與高頻通訊市場。"
+  ],
+  "risks": [
+   "原物料價格波動可能壓縮毛利率。",
+   "新產品量產不順或客戶需求下降。"
+  ],
+  "watch": [
+   "2026年全年營收與毛利率走勢。",
+   "GDR募集資金的使用進度與新產線建設。",
+   "主要客戶的訂單變化與季報公布。"
+  ],
+  "terms": [
+   {
+    "term": "矽電容",
+    "plain": "利用矽材料製作的電容器，具高頻特性，常用於通訊與車用電子。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=%E7%9F%BD%E9%9B%BB%E5%AE%B9&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "IoTRAM",
+    "plain": "專為物聯網裝置設計的低功耗隨機存取記憶體，支援長時間待機。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=IoTRAM&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "GDR",
+    "plain": "全球存託憑證，讓公司在海外市場募資，投資者可在外國交易所買賣。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=GDR&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   }
+  ]
+ },
+ "sources": [
+  {
+   "label": "證交所／櫃買中心公司基本資料（OpenAPI）",
+   "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  {
+   "label": "維基百科：精工愛普生",
+   "url": "https://zh.wikipedia.org/zh-tw/%E7%B2%BE%E5%B7%A5%E6%84%9B%E6%99%AE%E7%94%9F"
+  },
+  {
+   "label": "鉅亨網 2026-10-16：愛普*:係因本公司有價證券於集中交易市場達公布注意交易資訊標準，故公布相關財務業務等重大訊息，以利投資人區別瞭解。",
+   "url": "https://news.cnyes.com/news/id/6632102"
+  },
+  {
+   "label": "鉅亨網 2026-10-15：盤中速報 - 愛普(6531)股價殺至跌停，跌停價831.0元，成交5,269張",
+   "url": "https://news.cnyes.com/news/id/6631008"
+  },
+  {
+   "label": "鉅亨網 2026-10-14：愛普(6531)9月營收年增90.15%連三月創高，矽電容放量、IoTRAM滿載、GDR募資4.16億美元",
+   "url": "https://news.cnyes.com/news/id/6630024"
+  },
+  {
+   "label": "鉅亨網 2026-10-13：愛普*完成GDR訂價每股898元折價約5% 募資4.16億美元支應購料需求",
+   "url": "https://news.cnyes.com/news/id/6629151"
+  },
+  {
+   "label": "鉅亨網 2026-10-13：愛普*:公告本公司現金增資發行普通股參與發行海外存託憑證之發行條件",
+   "url": "https://news.cnyes.com/news/id/6629106"
+  },
+  {
+   "label": "鉅亨網 2026-10-06：愛普*9月營收11.89億元年增90.15% 1—9月達77.88億元",
+   "url": "https://news.cnyes.com/news/id/6622464"
+  },
+  {
+   "label": "愛普 官方網站",
+   "url": "https://www.apmemory.com"
+  }
+ ],
+ "dropped_sentences": 2,
+ "why": {
+  "digest_mentions": 0,
+  "news_7d": 5,
+  "weekly": true,
+  "supply": false
+ },
+ "snapshot": {
+  "close": 882.0,
+  "rev_yoy": 90.2,
+  "rev_month": "2026-09",
+  "gross": 47.71,
+  "pe": 50.87,
+  "yield": 0.79
+ },
+ "generated_at": "2026-10-19T02:08+08:00",
+ "emailed_at": "2026-10-19T02:08+08:00",
+ "line_sent_at": "2026-10-19T02:08+08:00"
+}

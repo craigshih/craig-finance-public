@@ -1,0 +1,311 @@
+name: Build site
+
+on:
+  schedule:
+    - cron: "0 14 * * *"      # 每天 UTC 14:00 = 台北時間 22:00（收盤資料都齊了之後）
+    - cron: "30 7 * * 1-5"    # 平日台北 15:30：台股收盤後先更新一次市場頁、熱力圖、強勢股（法人與融資晚上 22:00 那次會再補齊）
+    # 台北 07:00–12:30 每 30 分鐘：Tim-Lu 的每日總經有新檔或更新（例如補上朋友的工商時報摘要）才重建
+    - cron: "*/30 23,0-4 * * *"
+    # 每 3 小時：檢查大佬 13F 與川普 278-T 有沒有新申報，有才重建
+    - cron: "15 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write   # 安全網：每日一檔沒跑時由這裡補叫
+
+concurrency:
+  group: build-site
+  cancel-in-progress: false   # 排隊而不是取消，避免早上的檢查把晚上的完整重建取消掉
+
+jobs:
+  # 很輕的檢查：只問 GitHub API「Tim-Lu 的 data/digests 最後一次變動是哪個 commit」，跟上次建站時記下的比
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+      digest_sha: ${{ steps.check.outputs.sha }}
+      filings_fp: ${{ steps.check.outputs.fp }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            whales.py
+            scripts
+            data/state
+      # 每日一檔的安全網：GitHub 的排程是「盡力而為」，新排程或尖峰時段常常沒觸發。
+      # 建站檢查（早上每 30 分鐘一次）順便確認：08:00 後還沒產生就叫它產生，09:00 後還沒寄就叫它寄
+      - name: Daily pick safety net
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          today=$(TZ=Asia/Taipei date +%F); hm=$(TZ=Asia/Taipei date +%H%M)
+          [ "$hm" -lt 0800 ] && exit 0
+          busy=$(gh run list -R "$GITHUB_REPOSITORY" -w daily_pick.yml -L 5 --json status -q '[.[] | select(.status != "completed")] | length')
+          [ "${busy:-0}" -gt 0 ] && { echo "每日一檔正在跑"; exit 0; }
+          pick=$(gh api "repos/$GITHUB_REPOSITORY/contents/data/daily_pick/$today.json" -q .content 2>/dev/null | base64 -d 2>/dev/null || true)
+          send=false; [ "$hm" -ge 0900 ] && send=true
+          if [ -z "$pick" ]; then
+            echo "🛟 今天的每日一檔還沒產生，叫它跑（寄信：$send）" >> "$GITHUB_STEP_SUMMARY"
+            gh workflow run daily_pick.yml -R "$GITHUB_REPOSITORY" -f send=$send
+          elif [ "$send" = true ] && ! echo "$pick" | grep -q '"emailed_at"'; then
+            echo "🛟 今天的每日一檔還沒寄出，叫它寄" >> "$GITHUB_STEP_SUMMARY"
+            gh workflow run daily_pick.yml -R "$GITHUB_REPOSITORY" -f send=true
+          fi
+
+      - id: check
+        env:
+          GH_TOKEN: ${{ secrets.SOURCES_TOKEN }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          POLL: ${{ github.event.schedule == '*/30 23,0-4 * * *' || github.event.schedule == '15 */3 * * *' }}
+        run: |
+          sha=$(gh api "repos/craigshih/Tim-Lu/commits?path=data/digests&per_page=1" --jq '.[0].sha' || echo "")
+          fp=$(python3 scripts/filings_fingerprint.py || echo "")
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "fp=$fp" >> "$GITHUB_OUTPUT"
+          if [ "$POLL" != "true" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          last_sha=$(cat data/state/digest_sha.txt 2>/dev/null || echo "")
+          last_fp=$(cat data/state/filings_fp.txt 2>/dev/null || echo "")
+          if [ -n "$sha" ] && [ "$sha" = "$last_sha" ] && [ -n "$fp" ] && [ "$fp" = "$last_fp" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "⏭️ 每日總經、大佬 13F、川普 278-T 都沒有新資料，略過重建" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "🆕 有新資料（總經 $sha／申報 $fp），重建網站" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  build:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      # 兩個來源都是 private repo，需要一組只有 read 權限的 fine-grained token
+      - uses: actions/checkout@v4
+        with:
+          repository: craigshih/Tim-Lu
+          token: ${{ secrets.SOURCES_TOKEN }}
+          path: sources/tim-lu
+          sparse-checkout: data/digests
+
+      - uses: actions/checkout@v4
+        with:
+          repository: craigshih/investment-team
+          token: ${{ secrets.SOURCES_TOKEN }}
+          path: sources/investment-team
+          sparse-checkout: |
+            data/reports
+            data/screens
+
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install -g wrangler@3
+
+      # AI 顧問頁問過、但還不在每日計算範圍的股票（存在 D1），這次一起算
+      - name: Advisor watchlist
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p data/advisor
+          bash scripts/d1.sh "SELECT code FROM advisor_watch" > /tmp/watch.json \
+            && jq '[.[].code]' /tmp/watch.json > data/advisor/watch.json \
+            || echo '[]' > data/advisor/watch.json
+          echo "追蹤清單：$(cat data/advisor/watch.json)"
+
+      # 今日觀察標的（台股收盤後的法人資料＋美股前一交易日）；失敗不影響建站
+      - name: Daily observation picks
+        continue-on-error: true
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python picks.py
+
+      # 每日總經目錄卡的摘要標題（每天只產生一次）
+      - name: Daily digest headlines
+        continue-on-error: true
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python digest_titles.py
+
+      # AI 投資顧問的每日資料：全市場財報估值籌碼 + 約 300 檔的風控與回測（只會放進有密碼的 /portfolio/）
+      - name: Advisor data
+        continue-on-error: true
+        timeout-minutes: 8
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: python advisor.py
+
+      # 市場頁：指數、熱力圖、法人與融資、強勢股、大戶、處置股、除權息（用上一步的顧問資料算強勢股）
+      - name: Market data
+        continue-on-error: true
+        timeout-minutes: 8
+        run: python market.py
+
+      # 台股進階：誰在推指數、估值歷史位置、期貨籌碼（歷史檔存在 data/market/，每次只補新的）
+      - name: Market extras
+        continue-on-error: true
+        timeout-minutes: 8
+        run: python market_extra.py
+
+      # 市場寬度、加權 vs 等權、成交金額、類股輪動（全部上市櫃股票近兩年日線，每次重算約 2 分鐘）
+      - name: Market breadth
+        continue-on-error: true
+        timeout-minutes: 8
+        run: python breadth.py
+
+      # 大佬持股：SEC 13F（每季申報；已下載的不重抓，平常只檢查有沒有新申報）
+      - name: Whale holdings (13F)
+        continue-on-error: true
+        timeout-minutes: 8
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python whales.py
+
+      # 美股：Yahoo 報價＋SEC 官方財報與近期申報（排在 13F 之後，才能標出哪些大佬持有）
+      - name: US stocks
+        continue-on-error: true
+        timeout-minutes: 8
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: python us.py
+
+      # 川普的股票交易：OGE 278-T（只解析新申報；第一次較久）
+      - name: Trump trades (OGE 278-T)
+        continue-on-error: true
+        timeout-minutes: 15
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: |
+          # 有些申報是純圖片掃描檔，需要 OCR
+          sudo apt-get install -y -qq tesseract-ocr poppler-utils >/dev/null 2>&1 || echo "OCR 套件安裝失敗，純圖片申報這次略過"
+          python trump.py
+
+      # 供應鏈地圖：海外龍頭與台股相關公司的漲跌（用上一步存下的法人資料）
+      - name: Supply chain map data
+        continue-on-error: true
+        run: python supply.py
+
+      - name: Commit picks
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p data/state && printf '%s' "${{ needs.gate.outputs.digest_sha }}" > data/state/digest_sha.txt
+          [ -n "${{ needs.gate.outputs.filings_fp }}" ] && printf '%s' "${{ needs.gate.outputs.filings_fp }}" > data/state/filings_fp.txt
+          git add data/picks/ data/flows/ data/supply/ data/digest_titles/ data/state/ data/market/ data/whales/ data/us/ 2>/dev/null || exit 0
+          git diff --cached --quiet && exit 0
+          git commit -m "picks: $(TZ=Asia/Taipei date +%F)"
+          # 每日一檔等其他 workflow 可能同時推送：先同步再推，失敗重試幾次
+          # 資料檔每次都重新產生：撞到別的執行剛推上去的版本時，以這次的為準（-X theirs）；失敗就整個退回，不留下衝突標記
+          for i in 1 2 3; do git fetch -q origin main && { git rebase -q -X theirs origin/main || { git rebase --abort; false; }; } && git push -q && break; sleep $((i * 5)); done
+
+      - run: python build.py
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+
+      - name: Unit tests
+        run: npm test
+
+      # 用真的 AI 試問兩題，回答印在 log 裡檢查品質（不含持股資料；失敗不擋部署）
+      - name: Advisor live check
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          [ -f data/advisor/stocks.json ] || { echo "沒有顧問資料，略過"; exit 0; }
+          node tests/advisor_live.mjs "台積電和聯電哪個比較值得投資？"
+          node tests/advisor_live.mjs "什麼是最大回撤和 VaR？"
+
+      # 模擬交易用的 D1 資料庫：第一次執行時建立，之後沿用同一個
+      - name: Set up D1 and wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler pages project create craig-finance --production-branch=main >/dev/null 2>&1 || true
+          find_db() { wrangler d1 list --json | jq -r '.[] | select(.name=="craig-finance-sim") | .uuid'; }
+          id=$(find_db)
+          if [ -z "$id" ]; then wrangler d1 create craig-finance-sim; id=$(find_db); fi
+          [ -n "$id" ] || { echo "::error::找不到也建不了 D1 資料庫，請確認 Cloudflare token 有 D1 Edit 權限"; exit 1; }
+          cat > wrangler.toml <<EOF
+          name = "craig-finance"
+          pages_build_output_dir = "site"
+          compatibility_date = "2024-09-23"
+
+          [vars]
+          ACCESS_TEAM_DOMAIN = "你的團隊.cloudflareaccess.com"
+          ACCESS_AUD = "你的 Access 應用程式 AUD"
+
+          [[d1_databases]]
+          binding = "DB"
+          database_name = "craig-finance-sim"
+          database_id = "$id"
+          EOF
+          sed -i 's/^          //' wrangler.toml
+          wrangler d1 execute craig-finance-sim --remote --file schema.sql --yes
+          # 舊資料表補上新欄位（已經有的會報錯，略過即可）
+          for col in "kind TEXT" "session TEXT" "seen_high REAL" "seen_low REAL"; do
+            wrangler d1 execute craig-finance-sim --remote --yes --command "ALTER TABLE sim_orders ADD COLUMN $col" >/dev/null 2>&1 || true
+          done
+
+      # 用本機 D1 跑一份完整的網站，模擬登入的使用者下單、測密碼鎖；失敗就不部署
+      - name: Smoke test
+        env:
+          SMOKE_PASSWORD: smoke-test-password
+        run: |
+          wrangler d1 execute craig-finance-sim --local --file schema.sql --yes
+          wrangler pages dev site --port 8788 \
+            --binding ACCESS_DEV_EMAIL=smoke@example.com \
+            --binding PORTFOLIO_PASSWORD=$SMOKE_PASSWORD \
+            --binding SESSION_SECRET=smoke-session-secret > /tmp/dev.log 2>&1 &
+          for i in $(seq 1 60); do curl -s -o /dev/null http://localhost:8788/ && break; sleep 1; done
+          bash tests/smoke.sh || { echo "--- wrangler log ---"; tail -50 /tmp/dev.log; exit 1; }
+
+      # 投資頁密碼存在 Cloudflare（伺服器端），每次部署從 GitHub Secrets 同步
+      - name: Sync secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PORTFOLIO_PASSWORD: ${{ secrets.PORTFOLIO_PASSWORD }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          LINE_CHANNEL_SECRET: ${{ secrets.LINE_CHANNEL_SECRET }}
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: |
+          # LINE 機器人（每日一檔推到群組）：webhook 驗簽章與回覆用
+          for n in LINE_CHANNEL_SECRET LINE_CHANNEL_ACCESS_TOKEN; do
+            [ -n "${!n}" ] && printf '%s' "${!n}" | wrangler pages secret put "$n" --project-name craig-finance
+          done
+          if [ -z "$PORTFOLIO_PASSWORD" ] || [ -z "$SESSION_SECRET" ]; then
+            echo "::warning::還沒設定 PORTFOLIO_PASSWORD，投資頁會維持鎖住"
+            exit 0
+          fi
+          printf '%s' "$PORTFOLIO_PASSWORD" | wrangler pages secret put PORTFOLIO_PASSWORD --project-name craig-finance
+          printf '%s' "$SESSION_SECRET" | wrangler pages secret put SESSION_SECRET --project-name craig-finance
+          if [ -n "$GROQ_API_KEY" ]; then
+            printf '%s' "$GROQ_API_KEY" | wrangler pages secret put GROQ_API_KEY --project-name craig-finance
+          else
+            echo "::warning::沒有 GROQ_API_KEY，AI 投資顧問無法回答"
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: wrangler pages deploy site --project-name=craig-finance --branch=main

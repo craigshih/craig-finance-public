@@ -1,0 +1,141 @@
+{
+ "date": "2026-10-17",
+ "code": "3189",
+ "name": "景碩",
+ "market": "上市",
+ "industry": "半導體業",
+ "story": {
+  "title": "景碩如何從光碟機起家，成為AI晶片載板大戶？",
+  "one_liner": "從光碟機到AI高階載板，景碩一路布局IC載板核心技術。",
+  "industry": "景碩是IC載板（積體電路封裝載板）製造商，提供打線、覆晶、ABF等多種載板，客戶包括高通、聯發科、美光、賽靈思、NVIDIA等晶片公司；上游主要是材料供應商如味之素的ABF膜，下游則是手機、伺服器、AI晶片等終端產品，競爭對手有欣興、南電等。",
+  "history": [
+   {
+    "when": "2000-09-11",
+    "what": "在新竹科學園區成立，為華碩轉投資的封裝載板事業。"
+   },
+   {
+    "when": "2004-11-01",
+    "what": "在台灣證券交易所掛牌上市，代號3189。"
+   },
+   {
+    "when": "2008",
+    "what": "華碩分割和碩後，景碩改隸和碩集團。"
+   },
+   {
+    "when": "2014",
+    "what": "於新竹縣新豐鄉動土興建新廠，擴充載板產能。"
+   },
+   {
+    "when": "2025",
+    "what": "核准投入約235億台幣擴建ABF載板產能。"
+   }
+  ],
+  "now": [
+   "2026-10-06：9月營收51.81億元，年增44.47%，顯示AI與高效能運算需求帶動載板出貨。",
+   "2026-10-06：公司公告取得新土地，為未來擴產作準備。",
+   "2026-10-05：市場討論景碩、欣興、南電在2026～2027年大尺寸高層數載板的受益程度。"
+  ],
+  "opportunities": [
+   "ABF載板長期供不應求，AI晶片需求持續成長，景碩擴產可抓住市場缺口。",
+   "新取得土地可建設新廠，提升產能與技術迭代速度。",
+   "客戶如NVIDIA與高通持續升級晶片，對高階載板需求將持續上升。"
+  ],
+  "risks": [
+   "擴產需巨額資本支出，資金籌措與建廠進度若受阻，可能影響獲利。",
+   "載板材料高度依賴少數供應商，供應鏈中斷或價格上漲會壓縮毛利。",
+   "全球半導體景氣波動，若AI與高效能運算需求放緩，載板訂單可能下降。"
+  ],
+  "watch": [
+   "2026年全年營收與季營收成長率。",
+   "新廠動工與投產進度，尤其ABF載板產能擴張時程。",
+   "主要客戶的晶片出貨季報，觀察對載板需求的直接影響。"
+  ],
+  "terms": [
+   {
+    "term": "IC載板",
+    "plain": "積體電路封裝載板，介於晶片與印刷電路板之間，負責電氣連接與機械支撐。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=IC%E8%BC%89%E6%9D%BF&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "ABF載板",
+    "plain": "使用味之素增層膜的高階載板，線寬細、層數多，適合AI與高效能晶片。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=ABF%E8%BC%89%E6%9D%BF&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   },
+   {
+    "term": "覆晶",
+    "plain": "Flip Chip技術，晶片正面朝下直接接合載板，接點密度高，適用於高階處理器。",
+    "url": "https://zh.wikipedia.org/zh-tw/%E8%A6%86%E6%99%B6%E6%8A%80%E8%A1%93",
+    "url_label": "維基百科"
+   },
+   {
+    "term": "打線",
+    "plain": "Wire Bonding方式，以金屬細線將晶片接點連到載板，成本較低、成熟。",
+    "url": "https://zh.wikipedia.org/zh-tw/%E6%89%93%E7%B7%9A%E6%8E%A5%E5%90%88",
+    "url_label": "維基百科"
+   },
+   {
+    "term": "FC-BGA",
+    "plain": "覆晶球柵陣列載板，層數多、面積較大，主要供應伺服器與AI晶片。",
+    "url": "https://zh.wikipedia.org/w/index.php?search=FC-BGA&variant=zh-tw",
+    "url_label": "維基百科搜尋"
+   }
+  ]
+ },
+ "sources": [
+  {
+   "label": "證交所／櫃買中心公司基本資料（OpenAPI）",
+   "url": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+  },
+  {
+   "label": "維基百科：景碩科技",
+   "url": "https://zh.wikipedia.org/zh-tw/%E6%99%AF%E7%A2%A9%E7%A7%91%E6%8A%80"
+  },
+  {
+   "label": "鉅亨網 2026-10-16：鉅亨速報 - Factset 最新調查：景碩(3189-TW)EPS預估下修至11.81元，預估目標價為1280元",
+   "url": "https://news.cnyes.com/news/id/6632424"
+  },
+  {
+   "label": "鉅亨網 2026-10-14：鉅亨速報 - Factset 最新調查：景碩(3189-TW)EPS預估上修至11.79元，預估目標價為1125元",
+   "url": "https://news.cnyes.com/news/id/6630103"
+  },
+  {
+   "label": "鉅亨網 2026-10-08：鉅亨速報 - Factset 最新調查：景碩(3189-TW)EPS預估下修至11.36元，預估目標價為1057元",
+   "url": "https://news.cnyes.com/news/id/6624694"
+  },
+  {
+   "label": "鉅亨網 2026-10-06：景碩9月營收51.81億元年增44.47% 1—9月達381.41億元",
+   "url": "https://news.cnyes.com/news/id/6623034"
+  },
+  {
+   "label": "鉅亨網 2026-10-06：營收速報  - 景碩(3189)9月營收51.81億元年增率高達44.47％",
+   "url": "https://news.cnyes.com/news/id/6622941"
+  },
+  {
+   "label": "鉅亨網 2026-10-06：景碩:公告本公司取得土地之相關資訊",
+   "url": "https://news.cnyes.com/news/id/6622929"
+  },
+  {
+   "label": "景碩 官方網站",
+   "url": "https://www.kinsus.com.tw"
+  }
+ ],
+ "dropped_sentences": 0,
+ "why": {
+  "digest_mentions": 6,
+  "news_7d": 2,
+  "weekly": false,
+  "supply": false
+ },
+ "snapshot": {
+  "close": 1000.0,
+  "rev_yoy": 44.5,
+  "rev_month": "2026-09",
+  "gross": 23.77,
+  "pe": 185.53,
+  "yield": 0.15
+ },
+ "generated_at": "2026-10-17T08:57+08:00",
+ "emailed_at": "2026-10-17T09:07+08:00"
+}
