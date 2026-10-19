@@ -16,6 +16,7 @@
 | `https://craig-finance.pages.dev/feed/daily-pick-archive.json` | 最近 60 天的每日一檔清單 |
 | `https://craig-finance.pages.dev/feed/market.json` | 台股收盤：`summary` 一句話總結，加上指數、三大法人、族群、強勢股、注意處置股、除權息、估值、期貨籌碼 |
 | `https://craig-finance.pages.dev/feed/us.json` | 美股指數、類股 ETF、權值股、SEC 最新申報 |
+| `https://craig-finance.pages.dev/feed/stocks.json` | 全市場約 2,300 檔台股每日資料（AI 顧問用的同一份）：營收、毛利率、估值、融資、法人、因子、波動與回測、PTT 討論、供應鏈同業，約 1.5 MB |
 
 Discord 範例（discord.py，每天 9:10 把每日一檔貼到頻道）：
 

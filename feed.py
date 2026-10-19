@@ -104,6 +104,8 @@ def write_all(out: Path, picks: list[dict], line_messages, market: dict | None, 
             "daily-pick-archive.json": "最近 60 天的每日一檔清單",
             "market.json": "台股收盤：指數、漲跌家數、三大法人、族群、強勢股、注意處置股、除權息、估值、期貨籌碼",
             "us.json": "美股：主要指數、類股 ETF、權值股、SEC 最新申報",
+            "stocks.json": "全市場約 2,300 檔台股的每日資料（AI 顧問用的同一份）：營收、毛利率、估值、融資、法人、因子、"
+                           "波動與回測、PTT 討論、供應鏈同業；price_codes 裡的股票才有風控與回測（約 1.5 MB）",
         },
     }
     for name, data in files.items():

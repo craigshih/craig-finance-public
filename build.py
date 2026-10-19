@@ -1048,6 +1048,9 @@ def main() -> int:
             for c, s in full["stocks"].items()}}
         guest.pop("public_codes", None)
         (robot_dir / "stocks.json").write_text(json.dumps(guest, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        # 公開資料出口也放同一份（訪客版已經不含持股與提問清單，見上面）
+        (OUT_DIR / "feed").mkdir(parents=True, exist_ok=True)
+        (OUT_DIR / "feed" / "stocks.json").write_text(json.dumps(guest, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         robot_meta = {"generated_at": full["generated_at"], "price_codes": guest["price_codes"]}
     shutil.copy(ROOT / "static" / "advisor.js", robot_dir / "advisor.js")
     write(robot_dir / "index.html", page("專屬投資顧問", render_advisor_page(None, visuals.load_latest_picks(PICKS_DIR), robot_meta, guest=True), 1, "robot/index.html"))
