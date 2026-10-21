@@ -84,7 +84,7 @@ def candles(ohlc: list[list], w=1000, h=300) -> str:
     return f'<svg class="mk-candles" viewBox="0 0 {w} {h}" role="img" aria-label="日 K 線">{"".join(out)}</svg>'
 
 
-def index_board(indices: list[dict]) -> str:
+def index_board(indices: list[dict], group: str = "idx") -> str:
     if not indices:
         return '<p class="empty">指數資料暫時讀不到</p>'
     cards, charts = [], []
@@ -97,10 +97,10 @@ def index_board(indices: list[dict]) -> str:
             f'<span class="mk-idx-chg {cls(ix["chg"])}">{ix["chg"]:+,.2f}（{ix["chg_pct"]:+.2f}%）</span>{spark(closes)}</button>')
         o = ix["ohlc"]
         hi, lo = max(r[2] for r in o), min(r[3] for r in o)
-        charts.append(panel("idx", str(i),
+        charts.append(panel(group, str(i),
             f'<div class="mk-chart-head"><b>{e(ix["name"])}</b><span class="{cls(ix["chg"])}">{ix["close"]:,.2f}　{ix["chg"]:+,.2f}（{ix["chg_pct"]:+.2f}%）</span>'
             f'<small>近半年 高 {hi:,.2f}・低 {lo:,.2f}・資料日 {e(ix["date"])}</small></div>{candles(o)}', i == 0))
-    return (f'<div class="mk-idx-grid" data-tabs="idx">{"".join(cards)}</div>'
+    return (f'<div class="mk-idx-grid" data-tabs="{group}">{"".join(cards)}</div>'
             f'<div class="mk-chart">{"".join(charts)}</div>')
 
 
@@ -327,7 +327,11 @@ def render(m: dict | None, hero, section, extra: dict | None = None) -> str:
     date = (m.get("history") or [{}])[-1].get("date") or m["generated_at"][:10]
     body = hero("台股", "今天台股怎麼走", f"指數、產業熱力圖、法人與融資、強勢股、處置股與除權息，一頁看完・台股資料日 {e(date)}")
     body += '<main class="wrap">'
-    body += section("指數看板", index_board(m.get("indices", [])), '<span class="live-dot"></span><span class="live-stamp">盤中即時更新</span>・點卡片看近半年日 K')
+    ixs = m.get("indices", [])
+    body += section("指數看板", index_board([i for i in ixs if i["region"] != "匯率"]), '<span class="live-dot"></span><span class="live-stamp">盤中即時更新</span>・點卡片看近半年日 K')
+    fx = [i for i in ixs if i["region"] == "匯率"]
+    if fx:
+        body += section("匯率走勢", index_board(fx, "fx"), "美元指數與台幣匯率・點卡片看近半年日 K・台幣匯率數字越大＝台幣越弱")
     heat = (tabs("heat", [("ind", "上市櫃產業"), ("theme", "供應鏈題材")], "ind")
             + panel("heat", "ind", treemap(m.get("industries", [])), True)
             + panel("heat", "theme", treemap(m.get("themes", [])), False)

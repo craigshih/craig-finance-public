@@ -1,0 +1,31 @@
+name: Discord push
+
+# 平日台北 08:30、10:30、11:30、15:45 把網站重點推到 Discord 頻道（GitHub 排程常會晚幾分鐘到半小時）
+on:
+  schedule:
+    - cron: "30 0,2,3 * * 1-5"   # 台北 08:30、10:30、11:30
+    - cron: "45 7 * * 1-5"       # 台北 15:45
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: discord_push.py
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Push
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          [ -n "$DISCORD_WEBHOOK_URL" ] || { echo "::warning::還沒設定 DISCORD_WEBHOOK_URL，只印出訊息"; }
+          python discord_push.py

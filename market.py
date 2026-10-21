@@ -37,7 +37,9 @@ INDICES = [
     ("^TWII", "台股加權", "台"), ("TSM", "台積電 ADR", "美"), ("^SOX", "費城半導體", "美"), ("^GSPC", "S&P 500", "美"),
     ("^IXIC", "那斯達克", "美"), ("^N225", "日經 225", "日"), ("^KS11", "韓國綜合", "韓"), ("^VIX", "VIX 恐慌指數", "美"),
     ("CL=F", "WTI 原油", "商品"), ("DX-Y.NYB", "美元指數", "匯率"), ("TWD=X", "美元兌台幣", "匯率"),
+    ("JPYTWD=X", "100 日圓兌台幣", "匯率"), ("EURTWD=X", "歐元兌台幣", "匯率"),
 ]
+SCALE = {"JPYTWD=X": 100}  # 1 日圓約 0.2 台幣，取兩位小數看不出變化，改用 100 日圓計價（live.js 同步）
 HISTORY_DAYS = 60
 
 
@@ -88,7 +90,7 @@ def indices() -> list[dict]:
     out = []
     for ticker, name, region in INDICES:
         try:
-            df = data[ticker].dropna(subset=["Close"])
+            df = data[ticker].dropna(subset=["Close"]) * SCALE.get(ticker, 1)
         except KeyError:
             continue
         if len(df) < 2:
