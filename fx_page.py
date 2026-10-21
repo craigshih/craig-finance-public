@@ -81,29 +81,86 @@ LONG_SCRIPT = """<script>
   const box = document.getElementById("fx-long");
   if (!box) return;
   const data = JSON.parse(document.getElementById("fx-long-data").textContent);
+  const svg = box.querySelector("svg"), tip = box.querySelector(".fx-tip");
   let cur = box.querySelector('[data-tabs="fxcur"] .on').dataset.tab, days = +box.querySelector('[data-tabs="fxrange"] .on').dataset.tab;
+  let pts = [], ref = null;
+  const W = 1000, H = 300, R = 64, B = 24, T = 8;  // 右邊留給價格刻度、下面留給日期
   const fmt = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: v < 10 ? 3 : 2 });
+  let lo, hi, x, y;
+  const el = (tag, attrs, text) => {
+    const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (text != null) n.textContent = text;
+    return n;
+  };
   function draw() {
     const all = data[cur].closes, end = new Date(all[all.length - 1][0]);
     const from = new Date(end - days * 864e5).toISOString().slice(0, 10);
-    const pts = all.filter((r) => r[0] >= from);
-    const vs = pts.map((r) => r[1]), lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || 1;
-    const W = 1000, H = 260;
-    box.querySelector("polyline").setAttribute("points", pts.map((r, i) =>
-      `${(i / (pts.length - 1) * W).toFixed(1)},${(H - 8 - (r[1] - lo) / span * (H - 16)).toFixed(1)}`).join(" "));
+    pts = all.filter((r) => r[0] >= from);
+    const vs = pts.map((r) => r[1]);
+    lo = Math.min(...vs); hi = Math.max(...vs);
+    const span = hi - lo || 1;
+    x = (i) => i / (pts.length - 1) * (W - R);
+    y = (v) => T + (hi - v) / span * (H - B - T * 2);
+    svg.replaceChildren();
+    // 價格虛線：5 條等距，右邊標價格
+    for (let k = 0; k < 5; k++) {
+      const v = lo + span * k / 4;
+      svg.append(el("line", { class: "grid fx-dash", x1: 0, x2: W - R, y1: y(v), y2: y(v) }), el("text", { class: "ax", x: W - R + 6, y: y(v) + 4 }, fmt(v)));
+    }
+    // 時間刻度：約 6 個，短期標月/日、長期標年-月
+    const n = 6;
+    for (let k = 0; k <= n; k++) {
+      const i = Math.round(k / n * (pts.length - 1)), d = pts[i][0];
+      svg.append(el("line", { class: "grid fx-dash", x1: x(i), x2: x(i), y1: T, y2: H - B }),
+        el("text", { class: "ax", x: x(i), y: H - 6, "text-anchor": k === 0 ? "start" : k === n ? "end" : "middle" },
+          days <= 365 ? `${+d.slice(5, 7)}/${+d.slice(8)}` : d.slice(0, 7)));
+    }
+    const last = vs[vs.length - 1];
+    svg.append(el("line", { class: "last", x1: 0, x2: W - R, y1: y(last), y2: y(last) }),
+      el("polyline", { points: pts.map((r, i) => `${x(i).toFixed(1)},${y(r[1]).toFixed(1)}`).join(" ") }));
+    ref = null;
+    svg.append(el("g", { class: "fx-ref" }), el("g", { class: "fx-hover" }));
+    tip.textContent = "滑過圖表看當天價格・點一下留下一條基準線，再滑到其他日期比較";
     // 年化波動率：日對數報酬的標準差 × √252
     const rs = vs.slice(1).map((v, i) => Math.log(v / vs[i])), mean = rs.reduce((a, b) => a + b, 0) / rs.length;
     const vol = Math.sqrt(rs.reduce((a, b) => a + (b - mean) ** 2, 0) / (rs.length - 1) * 252) * 100;
-    const chg = (vs[vs.length - 1] / vs[0] - 1) * 100;
+    const chg = (last / vs[0] - 1) * 100;
     const at = (v) => pts[vs.indexOf(v)][0];
-    box.querySelector(".mk-axis").innerHTML = `<span>${pts[0][0]}</span><span>${data[cur].name} ${fmt(lo)}～${fmt(hi)}</span><span>${pts[pts.length - 1][0]}</span>`;
     const tile = (k, v, foot, c = "") => `<div class="stat"><div class="stat-label">${k}</div><div class="stat-value ${c}">${v}</div><div class="stat-foot"><span>${foot}</span></div></div>`;
     box.querySelector(".stats").innerHTML =
-      tile("期間漲跌", `${chg > 0 ? "+" : ""}${chg.toFixed(2)}%`, `${fmt(vs[0])} → ${fmt(vs[vs.length - 1])}`, chg > 0 ? "pos" : chg < 0 ? "neg" : "") +
+      tile("期間漲跌", `${chg > 0 ? "+" : ""}${chg.toFixed(2)}%`, `${pts[0][0]} ${fmt(vs[0])} → ${fmt(last)}`, chg > 0 ? "pos" : chg < 0 ? "neg" : "") +
       tile("期間最高", fmt(hi), at(hi)) + tile("期間最低", fmt(lo), at(lo)) +
       tile("高低差", `${((hi / lo - 1) * 100).toFixed(1)}%`, "最高比最低多幾 %") +
       tile("年化波動率", `${vol.toFixed(1)}%`, "日漲跌的標準差 × √252");
   }
+  // 滑鼠／手指位置 → 最接近的那一天
+  const pick = (ev) => {
+    const p = ev.touches ? ev.touches[0] : ev, r = svg.getBoundingClientRect();
+    const px = (p.clientX - r.left) / r.width * W;
+    return Math.max(0, Math.min(pts.length - 1, Math.round(px / (W - R) * (pts.length - 1))));
+  };
+  const mark = (g, i, label) => {
+    const [d, v] = pts[i];
+    g.replaceChildren(el("line", { class: "fx-cross", x1: 0, x2: W - R, y1: y(v), y2: y(v) }),
+      el("line", { class: "fx-cross", x1: x(i), x2: x(i), y1: T, y2: H - B }),
+      el("circle", { class: "fx-dot", cx: x(i), cy: y(v), r: 4 }),
+      el("text", { class: "fx-label", x: Math.min(x(i) + 8, W - R - 150), y: Math.max(y(v) - 8, 16) }, label || `${d}  ${fmt(v)}`));
+  };
+  const move = (ev) => {
+    if (!pts.length) return;
+    const i = pick(ev), [d, v] = pts[i];
+    mark(svg.querySelector(".fx-hover"), i);
+    tip.textContent = ref ? `${d}　${fmt(v)}　比基準（${ref[0]} ${fmt(ref[1])}）${v >= ref[1] ? "+" : ""}${((v / ref[1] - 1) * 100).toFixed(2)}%` : `${d}　${fmt(v)}`;
+  };
+  svg.addEventListener("mousemove", move);
+  svg.addEventListener("touchmove", move, { passive: true });
+  svg.addEventListener("click", (ev) => {
+    const i = pick(ev);
+    ref = pts[i];
+    mark(svg.querySelector(".fx-ref"), i, `基準 ${ref[0]}  ${fmt(ref[1])}`);
+    move(ev);
+  });
   box.addEventListener("click", (ev) => {
     const b = ev.target.closest("[data-tab]");
     if (!b) return;
@@ -116,14 +173,14 @@ LONG_SCRIPT = """<script>
 
 
 def long_chart(hist: dict | None) -> str:
-    """匯率長期走勢：選幣別、選時長，前端畫線並算期間漲跌、高低點與年化波動率。"""
+    """匯率長期走勢：選幣別、選時長；有日期刻度、價格虛線，滑過看當天價格、點一下留基準線比較。"""
     if not hist:
         return '<p class="empty">長期資料暫時讀不到</p>'
     keys = [t for t, *_ in PAIRS if t in hist]
     data = json.dumps(hist, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     return (f'<div id="fx-long">{tabs("fxcur", [(t, hist[t]["name"]) for t in keys], keys[0])} {tabs("fxrange", RANGES, "1095")}'
-            '<svg class="mk-line" viewBox="0 0 1000 260" preserveAspectRatio="none"><polyline points=""/></svg>'
-            '<div class="mk-axis"></div><div class="stats"></div></div>'
+            '<div class="mk-chart"><svg class="mk-candles fx-long-svg" viewBox="0 0 1000 300" role="img" aria-label="匯率長期走勢"></svg>'
+            '<p class="mk-note fx-tip"></p></div><div class="stats"></div></div>'
             f'<script type="application/json" id="fx-long-data">{data}</script>{LONG_SCRIPT}')
 
 
