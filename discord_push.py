@@ -9,6 +9,7 @@ import json
 import os
 import re
 import sys
+import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
@@ -106,12 +107,18 @@ PROMPT = """你是財經網站的編輯。依下面 JSON 資料，替每個區�
 格式：「一句結論 → 這個結論可能帶來的影響」，語氣直接，繁體中文，60 字以內。
 規則：
 - 只能用資料裡出現的數字，不要自己計算新數字，也不要補充資料以外的事實
-- 「影響」寫市場結構、風險或接下來要留意的事；不預測漲跌，不給買賣建議，不提目標價
+- 「影響」要點名具體受影響的對象（例如出口電子股、進口業者、權值股、中小型股、AI 供應鏈、外資），說清楚影響的是什麼
+- 不預測漲跌（不要寫「跌勢延續」「將上漲」），不給買賣建議，不提目標價
+- 不要只寫「觀察」「注意」「留意」「關注」這類空泛的詞
 - 不要提到資料裡沒有的指標或事件（例如成交量、新聞、政策）
 - 匯率方向：「美元兌台幣」「100 日圓兌台幣」「歐元兌台幣」是 1 單位外幣換多少台幣，數字下跌＝台幣升值、外幣走弱；數字上升＝台幣貶值、外幣走強
 - 程式已在標題前列出匯率報價與 VIX 數值，這兩區不要重複那些數字，直接寫結論
 - 不要重複區塊名稱或日期（程式會自己加）
-範例：台股是權值股撐起來的上漲 → 一旦台積電轉弱，指數缺少其他股票承接，回檔幅度可能放大
+範例（只學寫法，數字一律用資料裡的）：
+- 台股是權值股撐起來的上漲 → 一旦台積電轉弱，指數缺少其他股票承接，回檔幅度可能放大
+- 台幣對三大幣別同步升值 → 以美元報價的電子出口股，換回台幣的營收會被壓縮
+- 費半一週大跌，資金撤出美國科技股 → 台股 AI 供應鏈少了美股的外部支撐
+- 恐慌指數回到低檔 → 市場對壞消息的緩衝變小，突發利空時波動容易被放大
 回傳 JSON，key 只能是資料裡有的區塊（fx、market、valuation、us、vix、pick），值是那一行標題。
 
 資料：
@@ -129,19 +136,32 @@ def numbers_ok(text: str, data: str) -> bool:
     return True
 
 
+GROQ_KEY = lambda: (os.environ.get("GROQ_API_KEY") or "").strip()  # noqa: E731
+
+
+def ask_groq(prompt: str) -> dict:
+    """呼叫 Groq 回傳 JSON；Discord 標題與匯率頁解讀共用（medium：比 low 多想一下，寫得比較具體）。"""
+    for attempt in range(3):  # 免費方案每分鐘有用量上限，遇到 429 等一下再試；JSON 格式錯誤就重問
+        r = requests.post("https://api.groq.com/openai/v1/chat/completions", headers={"Authorization": f"Bearer {GROQ_KEY()}"},
+                          json={"model": os.environ.get("GROQ_MODEL") or "openai/gpt-oss-120b", "reasoning_effort": "medium",
+                                "max_completion_tokens": 4000, "response_format": {"type": "json_object"},
+                                "messages": [{"role": "user", "content": prompt}]}, timeout=120)
+        if r.status_code == 400 and "json_validate_failed" in r.text:
+            continue  # AI 偶爾吐出不合格式的 JSON，重問一次
+        if r.status_code != 429:
+            break
+        time.sleep(20 * (attempt + 1))
+    r.raise_for_status()
+    return json.loads(r.json()["choices"][0]["message"]["content"])
+
+
 def ai_headlines(f: dict) -> dict:
     """一次呼叫 Groq 拿所有區塊的標題；沒有金鑰、失敗、含禁用字或亂編數字的區塊就不採用（改用固定句型）。"""
-    key = (os.environ.get("GROQ_API_KEY") or "").strip()
-    if not key or not f:
+    if not GROQ_KEY() or not f:
         return {}
     data = json.dumps(f, ensure_ascii=False)
     try:
-        r = requests.post("https://api.groq.com/openai/v1/chat/completions", headers={"Authorization": f"Bearer {key}"},
-                          json={"model": os.environ.get("GROQ_MODEL") or "openai/gpt-oss-120b", "reasoning_effort": "low",
-                                "max_completion_tokens": 2000, "response_format": {"type": "json_object"},
-                                "messages": [{"role": "user", "content": PROMPT.format(data=data)}]}, timeout=90)
-        r.raise_for_status()
-        got = json.loads(r.json()["choices"][0]["message"]["content"])
+        got = ask_groq(PROMPT.format(data=data))
     except (requests.RequestException, ValueError, KeyError, IndexError) as exc:
         print(f"⚠️ AI 標題失敗，改用固定句型：{exc}", file=sys.stderr)
         return {}

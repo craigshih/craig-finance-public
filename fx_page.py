@@ -273,6 +273,7 @@ def facts(m: dict, cs: list[dict]) -> dict:
         "股市": {ix[t]["name"]: {"漲跌%": ix[t]["chg_pct"]} for *_, t in PAIRS if t in ix},
         "近60日相關係數": {f'{c["fx"]} vs {c["stock"]}': c["r"] for c in cs},
         "外資近5日買賣超合計（億元）": round(sum(x.get("foreign") or 0 for x in hist), 1) if hist else None,
+        "值得一提的連動（相關係數絕對值 ≥ 0.2）": {f'{c["fx"]} vs {c["stock"]}': f'{c["r"]:+.2f}：{describe(c)}' for c in cs if abs(c["r"]) >= 0.2},
     }
 
 
@@ -281,9 +282,11 @@ PROMPT = """你是財經網站的編輯。依下面 JSON 資料，寫 2 到 3 �
 規則：
 - 只能用資料裡出現的數字，不要自己計算新數字，也不要補充資料以外的事實
 - 相關係數是過去的統計，不要寫成會發生的事；不預測漲跌，不給買賣建議，不提目標價
-- 相關係數絕對值小於 0.2 就說「幾乎沒有連動」，不要解讀成正向或負向關聯
+- 相關係數絕對值小於 0.2 的不要個別提，最多一句「其他匯率和股市幾乎沒有連動」帶過
+- 一定要寫到：「外資近5日買賣超合計」對台幣與台股的意義，以及「值得一提的連動」裡的每一項
+- 「影響」要點名具體對象（例如出口電子股、進口業者、外資、美國科技股）
 - 匯率方向：「美元兌台幣」「100 日圓兌台幣」「歐元兌台幣」是 1 單位外幣換多少台幣，數字下跌＝台幣升值、外幣走弱；數字上升＝台幣貶值、外幣走強
-- 重點放在「影響」，不要逐一複述每個數字
+- 不要逐一複述每個匯率的收盤價和漲跌
 回傳 JSON：{{"text": "那幾句話"}}
 
 資料：
@@ -292,28 +295,28 @@ PROMPT = """你是財經網站的編輯。依下面 JSON 資料，寫 2 到 3 �
 
 def ai_view(f: dict) -> str:
     """沒有金鑰、失敗或沒通過檢查就回空字串（整段不顯示）。"""
-    import picks
-    from discord_push import numbers_ok
+    from discord_push import GROQ_KEY, ask_groq, has_banned, numbers_ok
 
-    if not picks.GROQ_API_KEY:
+    if not GROQ_KEY():
         return ""
     data = json.dumps(f, ensure_ascii=False)
-    try:
-        text = str(json.loads(picks.call_groq(PROMPT.format(data=data))).get("text") or "").strip()
-    except Exception as exc:  # noqa: BLE001 — AI 失敗不能讓整個建站失敗
-        print(f"⚠️ 匯率 AI 解讀失敗：{exc}", file=sys.stderr)
-        return ""
-    if not text or len(text) > 300 or picks.has_banned(text) or not numbers_ok(text, data + " 0.2"):  # 0.2 是提示詞裡的門檻
-        print(f"⚠️ 匯率 AI 解讀沒通過檢查，不顯示：{text}", file=sys.stderr)
-        return ""
-    return text
+    for _ in range(2):  # 沒通過檢查就重寫一次（一天只產生一次，多問一次不貴）
+        try:
+            text = str(ask_groq(PROMPT.format(data=data)).get("text") or "").strip()
+        except Exception as exc:  # noqa: BLE001 — AI 失敗不能讓整個建站失敗
+            print(f"⚠️ 匯率 AI 解讀失敗：{exc}", file=sys.stderr)
+            return ""
+        if text and len(text) <= 300 and not has_banned(text) and numbers_ok(text, data + " 0.2"):  # 0.2 是提示詞裡的門檻
+            return text
+        print(f"⚠️ 匯率 AI 解讀沒通過檢查：{text}", file=sys.stderr)
+    return ""
 
 
 def refresh_ai(m: dict, path: Path) -> None:
     """台北 15:30 後（台股收盤資料齊了）每天最多試一次；失敗就沿用舊的一段，當天不再重試。"""
-    import picks
+    from discord_push import GROQ_KEY
 
-    if not picks.GROQ_API_KEY:
+    if not GROQ_KEY():
         return  # 沒有金鑰不記錄，等金鑰設好當天就能產生
     now = datetime.now(timezone(timedelta(hours=8)))
     today = now.date().isoformat()
