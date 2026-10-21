@@ -6,6 +6,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 os.environ.pop("GROQ_API_KEY", None)
 import discord_push as dp  # noqa: E402
 
+dp.news = lambda: []  # 不連網
+
 data = '{"本益比":24.82,"本益比在近10年的百分位":91,"外資":-795.4,"近5日%":-7.58}'
 assert dp.numbers_ok("本益比 24.8 倍、近 10 年 91% 高位", data)
 assert dp.numbers_ok("外資賣超 795.4 億、費半 5 天跌 7.6%", data)

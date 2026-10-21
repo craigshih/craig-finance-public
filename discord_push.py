@@ -9,7 +9,9 @@ import json
 import os
 import re
 import sys
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 
 import requests
 
@@ -46,6 +48,27 @@ def fx_quotes() -> dict:
 
 def link(text: str, path: str) -> str:
     return f"• [{text}]({SITE}/{path})"
+
+
+NEWS_FEEDS = ("headline", "tw_stock")  # 鉅亨網頭條、台股（跟網站即時快報同一個來源，robots.txt 允許）
+NEWS_MAX = 5
+
+
+def news() -> list[str]:
+    """最新幾則新聞標題，直接連到鉅亨網原文；標題照原文、不經 AI 改寫。"""
+    items = {}
+    for feed in NEWS_FEEDS:
+        try:
+            r = requests.get(f"https://news.cnyes.com/rss/v1/news/category/{feed}", headers={"User-Agent": UA}, timeout=30)
+            r.raise_for_status()
+            for it in ET.fromstring(r.content).iter("item"):
+                url, title = (it.findtext("link") or "").strip(), (it.findtext("title") or "").strip()
+                if title and url.startswith("https://news.cnyes.com/"):
+                    items[url] = (parsedate_to_datetime(it.findtext("pubDate")), title)
+        except (requests.RequestException, ET.ParseError, TypeError, ValueError) as exc:
+            print(f"⚠️ 新聞 {feed} 讀取失敗：{exc}", file=sys.stderr)
+    top = sorted(items.items(), key=lambda kv: kv[1][0], reverse=True)[:NEWS_MAX]
+    return [f'• [{t.astimezone(TAIPEI):%H:%M} {title.replace("[", "［").replace("]", "］")}]({url})' for url, (t, title) in top]
 
 
 def facts(pick: dict | None, market: dict | None, us: dict | None, fx: dict) -> dict:
@@ -152,6 +175,8 @@ def lines(pick: dict | None, market: dict | None, us: dict | None, fx: dict) -> 
     if pick:
         rows.append(("pick", f'每日一檔 {pick["date"][5:]}', f'{f["pick"]["公司"]}{f["pick"]["標題"] or ""}', f'pick/{pick["date"]}.html'))
     out = [link("｜".join(x for x in (prefix, ai.get(k) or fallback) if x), path) for k, prefix, fallback, path in rows]
+    if (ns := news()):
+        out += ["", "**新聞重點**", *ns, link("更多即時快報", "news/index.html"), ""]
     out += [link("每日總經", "daily/index.html"), link("供應鏈地圖", "supply/index.html"), link("大佬持股", "whales/index.html")]
     return out
 
