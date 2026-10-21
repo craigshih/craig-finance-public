@@ -17,7 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: discord_push.py
+          sparse-checkout: |
+            discord_push.py
+            picks.py
+            investors.py
           sparse-checkout-cone-mode: false
       - uses: actions/setup-python@v5
         with:
@@ -26,6 +29,7 @@ jobs:
       - name: Push
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # AI 標題；沒有就用固定句型
         run: |
           [ -n "$DISCORD_WEBHOOK_URL" ] || { echo "::warning::還沒設定 DISCORD_WEBHOOK_URL，只印出訊息"; }
           python discord_push.py
