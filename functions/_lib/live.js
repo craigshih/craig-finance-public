@@ -3,7 +3,7 @@
 
 export const INDEX_SYMBOLS = {
   "^TWII": "台股加權", "^TWOII": "櫃買指數", "TSM": "台積電 ADR", "^SOX": "費城半導體", "^GSPC": "S&P 500",
-  "^IXIC": "那斯達克", "^DJI": "道瓊", "^RUT": "羅素 2000", "^N225": "日經 225", "^KS11": "韓國綜合", "^VIX": "VIX", "CL=F": "WTI 原油",
+  "^IXIC": "那斯達克", "^DJI": "道瓊", "^RUT": "羅素 2000", "^N225": "日經 225", "^KS11": "韓國綜合", "^STOXX50E": "歐洲 STOXX 50", "^VIX": "VIX", "CL=F": "WTI 原油",
   "DX-Y.NYB": "美元指數", "TWD=X": "美元兌台幣",
   "JPYTWD=X": "100 日圓兌台幣", "EURTWD=X": "歐元兌台幣",
 };

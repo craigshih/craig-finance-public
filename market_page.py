@@ -329,9 +329,6 @@ def render(m: dict | None, hero, section, extra: dict | None = None) -> str:
     body += '<main class="wrap">'
     ixs = m.get("indices", [])
     body += section("指數看板", index_board([i for i in ixs if i["region"] != "匯率"]), '<span class="live-dot"></span><span class="live-stamp">盤中即時更新</span>・點卡片看近半年日 K')
-    fx = [i for i in ixs if i["region"] == "匯率"]
-    if fx:
-        body += section("匯率走勢", index_board(fx, "fx"), "美元指數與台幣匯率・點卡片看近半年日 K・台幣匯率數字越大＝台幣越弱")
     heat = (tabs("heat", [("ind", "上市櫃產業"), ("theme", "供應鏈題材")], "ind")
             + panel("heat", "ind", treemap(m.get("industries", [])), True)
             + panel("heat", "theme", treemap(m.get("themes", [])), False)

@@ -133,7 +133,7 @@ def lines(pick: dict | None, market: dict | None, us: dict | None, fx: dict) -> 
     rows = []  # (區塊, 前綴, AI 失敗時的固定句型, 連結)
     if fx:
         quotes = "・".join(f'{name} {fx[s]["price"] * unit:.3f}（{fx[s]["pct"]:+.2f}%）' for s, name, unit in FX if s in fx)
-        rows.append(("fx", f"台幣匯率 {quotes}", "", "market/index.html"))
+        rows.append(("fx", f"台幣匯率 {quotes}", "", "fx/index.html"))
     if "market" in f:
         rows.append(("market", f'台股 {(market.get("date") or "")[5:]}', market["summary"].split("；")[0], "market/index.html"))
     if "valuation" in f:

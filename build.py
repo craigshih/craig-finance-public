@@ -40,7 +40,7 @@ STATEMENT_DIR = SOURCES_DIR / "trade-report" / "data" / "statements"
 PICKS_DIR = ROOT / "data" / "picks"
 
 # (路徑, 標籤, 手機上的短標籤)
-NAV = [("index.html", "總覽", "總覽"), ("pick/index.html", "每日一檔", "一檔"), ("market/index.html", "台股", "台股"), ("us/index.html", "美股", "美股"), ("news/index.html", "即時快報", "快報"),
+NAV = [("index.html", "總覽", "總覽"), ("pick/index.html", "每日一檔", "一檔"), ("market/index.html", "台股", "台股"), ("us/index.html", "美股", "美股"), ("fx/index.html", "匯率", "匯率"), ("news/index.html", "即時快報", "快報"),
        ("daily/index.html", "每日總經", "總經"), ("weekly/index.html", "每週研究", "研究"), ("supply/index.html", "供應鏈", "供應鏈"),
        ("whales/index.html", "大佬持股", "大佬"),
        ("sim/index.html", "模擬交易", "模擬"), ("robot/index.html", "專屬投資顧問", "顧問"),
@@ -966,6 +966,8 @@ def main() -> int:
                 {"date": pk["date"], "messages": daily_pick.line_messages(pk)}, ensure_ascii=False), encoding="utf-8")
     if not picks_all:
         write(OUT_DIR / "pick" / "index.html", page("每日一檔", hero("每日一檔", "準備中", "第一篇明天早上 9 點前產生。"), 1, "pick/index.html"))
+    import fx_page
+    write(OUT_DIR / "fx" / "index.html", page("匯率", fx_page.render(market, hero, section), 1, "fx/index.html"))
     import us_page
     us_data = market_page.load(ROOT / "data" / "us" / "latest.json")
     write(OUT_DIR / "us" / "index.html", page("美股", us_page.render(us_data, hero, section, datetime.now(TAIPEI).strftime("%Y-%m-%d")), 1, "us/index.html"))

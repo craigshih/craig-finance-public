@@ -217,6 +217,7 @@ jobs:
       - run: python build.py
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # 匯率頁的 AI 解讀；沒有就不顯示那一段
 
       - name: Unit tests
         run: npm test
