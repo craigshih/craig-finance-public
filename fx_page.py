@@ -12,6 +12,8 @@ from market_page import TAB_SCRIPT, cls, e, flow_bars, index_board, tabs
 # (匯率, 「數字上升」代表什麼, 對照的股市)
 PAIRS = [("TWD=X", "台幣轉弱", "^TWII"), ("JPYTWD=X", "日圓走強", "^N225"),
          ("EURTWD=X", "歐元走強", "^STOXX50E"), ("DX-Y.NYB", "美元走強", "^GSPC")]
+# 避險情緒：市場緊張（VIX 上升）時，資金常流向日圓、美元
+HEDGE = [("^VIX", "市場恐慌升高", "JPYTWD=X"), ("^VIX", "市場恐慌升高", "DX-Y.NYB")]
 DAYS = 60
 
 
@@ -20,11 +22,11 @@ def returns(ix: dict) -> dict:
     return {o[i][0]: o[i][4] / o[i - 1][4] - 1 for i in range(1, len(o)) if o[i - 1][4]}
 
 
-def correlations(m: dict) -> list[dict]:
+def correlations(m: dict, pairs=PAIRS) -> list[dict]:
     """近 60 個共同交易日的日報酬相關係數。"""
     ix = {i["ticker"]: i for i in m.get("indices") or []}
     out = []
-    for fx, up, stock in PAIRS:
+    for fx, up, stock in pairs:
         if fx not in ix or stock not in ix:
             continue
         a, b = returns(ix[fx]), returns(ix[stock])
@@ -44,12 +46,12 @@ def describe(c: dict) -> str:
     return f'{c["up"]}的日子，{c["stock"]}{how}傾向{"同步上漲" if r > 0 else "下跌"}'
 
 
-def corr_table(cs: list[dict]) -> str:
+def corr_table(cs: list[dict], head=("匯率", "股市")) -> str:
     if not cs:
         return '<p class="empty">資料不足，暫時算不出連動</p>'
     rows = "".join(f'<tr><td>{e(c["fx"])}</td><td>{e(c["stock"])}</td><td class="num {cls(c["r"])}">{c["r"]:+.2f}</td>'
                    f'<td>{e(describe(c))}</td></tr>' for c in cs)
-    return (f'<div class="table-wrap"><table class="holdings"><thead><tr><th>匯率</th><th>股市</th><th class="num">相關係數</th><th>過去的關係</th></tr></thead><tbody>{rows}</tbody></table></div>'
+    return (f'<div class="table-wrap"><table class="holdings"><thead><tr><th>{head[0]}</th><th>{head[1]}</th><th class="num">相關係數</th><th>過去的關係</th></tr></thead><tbody>{rows}</tbody></table></div>'
             f'<p class="mk-note">每日漲跌幅的相關係數，介於 -1 到 +1；近 {cs[0]["n"]} 個共同交易日的統計，不代表未來。</p>')
 
 
@@ -128,7 +130,9 @@ def long_chart(hist: dict | None) -> str:
 def facts(m: dict, cs: list[dict]) -> dict:
     ix = {i["ticker"]: i for i in m.get("indices") or []}
     hist = (m.get("history") or [])[-5:]
+    vix = ix.get("^VIX")
     return {
+        "VIX 恐慌指數": vix and {"收盤": vix["close"], "漲跌%": vix["chg_pct"]},
         "匯率": {ix[t]["name"]: {"收盤": ix[t]["close"], "漲跌%": ix[t]["chg_pct"]} for t, *_ in PAIRS if t in ix},
         "股市": {ix[t]["name"]: {"漲跌%": ix[t]["chg_pct"]} for *_, t in PAIRS if t in ix},
         "近60日相關係數": {f'{c["fx"]} vs {c["stock"]}': c["r"] for c in cs},
@@ -170,14 +174,15 @@ def render(m: dict | None, hero, section, hist: dict | None = None) -> str:
     fx = [i for i in (m or {}).get("indices") or [] if i["region"] == "匯率"]
     if not fx:
         return hero("匯率", "匯率資料準備中", "下一次網站更新後就會出現。")
-    cs = correlations(m)
+    cs, hedge = correlations(m), correlations(m, HEDGE)
     body = hero("匯率", "台幣跟著誰走", f"台幣兌美元、日圓、歐元的走勢，以及匯率和各地股市的連動・資料日 {e(fx[0]['date'])}")
     body += '<main class="wrap">'
     body += section("匯率走勢", index_board(fx, "fx"), '<span class="live-dot"></span><span class="live-stamp">盤中即時更新</span>・點卡片看近半年日 K・台幣匯率數字越大＝台幣越弱')
     body += section("長期走勢", long_chart(hist), "選幣別與時長・最長近 10 年日收盤")
-    view = ai_view(facts(m, cs))
+    view = ai_view(facts(m, cs + hedge))
     if view:
         body += section("AI 解讀", f'<p>{e(view)}</p>', "AI 依本頁數字整理，僅供學習研究，不構成投資建議")
     body += section("匯率與股市連動", corr_table(cs), "美元／台幣 vs 台股・100 日圓／台幣 vs 日經・歐元／台幣 vs 歐洲 STOXX 50・美元指數 vs S&P 500")
+    body += section("避險情緒", corr_table(hedge, ("恐慌指標", "匯率")), "市場緊張時，資金常流向日圓、美元：看 VIX 上升的日子，日圓、美元是否同步走強")
     body += section("外資進出 vs 台幣", flows_vs_twd(m), "上：外資買賣超（上市，億元）・下：美元兌台幣收盤")
     return body + "</main>" + TAB_SCRIPT

@@ -68,6 +68,10 @@ def facts(pick: dict | None, market: dict | None, us: dict | None, fx: dict) -> 
         f["us"] = {"資料日": us["indices"][0].get("date"),
                    "指數": [{"名稱": i["name"], "當日%": i.get("d1"), "近5日%": i.get("d5")} for i in us["indices"][:5]],
                    "最強類股": [{s["name"]: s["d1"]} for s in sec[:2]], "最弱類股": [{s["name"]: s["d1"]} for s in sec[-2:]]}
+    vix = next((i for i in (us or {}).get("indices") or [] if i.get("ticker") == "^VIX"), None)
+    if vix:
+        f["vix"] = {"VIX": vix.get("price"), "當日%": vix.get("d1"), "近5日%": vix.get("d5"),
+                    "在近52週高低區間的位置%": vix.get("pos52"), "近52週最高": vix.get("hi52"), "近52週最低": vix.get("lo52")}
     if pick:
         st = pick.get("story") or {}
         f["pick"] = {"公司": f'{pick["name"]}（{pick["code"]}）', "標題": st.get("title"), "一句話": st.get("one_liner"),
@@ -82,7 +86,7 @@ PROMPT = """你是財經網站的編輯。依下面 JSON 資料，替每個區�
 - 「影響」寫市場結構、風險或接下來要留意的事；不預測漲跌，不給買賣建議，不提目標價
 - 不要重複區塊名稱或日期（程式會自己加）
 範例：台股是權值股撐起來的上漲 → 一旦台積電轉弱，指數缺少其他股票承接，回檔幅度可能放大
-回傳 JSON，key 只能是資料裡有的區塊（fx、market、valuation、us、pick），值是那一行標題。
+回傳 JSON，key 只能是資料裡有的區塊（fx、market、valuation、us、vix、pick），值是那一行標題。
 
 資料：
 {data}"""
@@ -142,6 +146,9 @@ def lines(pick: dict | None, market: dict | None, us: dict | None, fx: dict) -> 
     if "us" in f:
         ix = "、".join(f'{i["名稱"]} {i["當日%"]:+.2f}%' for i in f["us"]["指數"][:3] if i["當日%"] is not None)
         rows.append(("us", f'美股 {(f["us"]["資料日"] or "")[5:]}', ix, "us/index.html"))
+    if "vix" in f:
+        v = f["vix"]
+        rows.append(("vix", f'市場情緒 VIX {v["VIX"]}（{v["當日%"]:+.2f}%）', f'近 52 週區間的 {v["在近52週高低區間的位置%"]}% 位置', "us/index.html"))
     if pick:
         rows.append(("pick", f'每日一檔 {pick["date"][5:]}', f'{f["pick"]["公司"]}{f["pick"]["標題"] or ""}', f'pick/{pick["date"]}.html'))
     out = [link("｜".join(x for x in (prefix, ai.get(k) or fallback) if x), path) for k, prefix, fallback, path in rows]

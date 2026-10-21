@@ -18,3 +18,9 @@ out = dp.lines(None, market, None, fx)                    # 沒有金鑰 → 固
 assert "100 日圓 20.290" in out[0] and out[1].startswith("• [台股 10-21｜台股加權收 46,888](")
 assert "本益比 24.82 倍，在近 10 年 91% 的位置" in out[2]
 print("ok")
+
+us = {"indices": [{"ticker": "^GSPC", "name": "S&P 500", "date": "2026-10-20", "d1": 0.28, "d5": -1.2},
+                  {"ticker": "^VIX", "name": "VIX 恐慌指數", "price": 17.31, "d1": -6.13, "d5": 13.36, "pos52": 22, "hi52": 31.05, "lo52": 13.47}]}
+vix = [x for x in dp.lines(None, None, us, {}) if "市場情緒" in x]
+assert vix and vix[0].startswith("• [市場情緒 VIX 17.31（-6.13%）｜近 52 週區間的 22% 位置](")
+print("vix ok")
