@@ -1,0 +1,37 @@
+name: Discord push
+
+# 平日台北 08:45、10:30、11:30、15:45 把網站重點推到 Discord 頻道
+# 固定這四次，不管網站多常更新（GitHub 排程常會晚幾分鐘到半小時）
+on:
+  schedule:
+    - cron: "45 0 * * 1-5"       # 台北 08:45
+    - cron: "30 2,3 * * 1-5"     # 台北 10:30、11:30
+    - cron: "45 7 * * 1-5"       # 台北 15:45
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10   # AI 遇到用量上限會等待重試
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            discord_push.py
+            picks.py
+            investors.py
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Push
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GROQ_API_KEY: ${{ secrets.ALLEN_GROQ_API_KEY }}   # AI 標題用 Allen 自己的 Groq；沒有就用固定句型
+        run: |
+          [ -n "$DISCORD_WEBHOOK_URL" ] || { echo "::warning::還沒設定 DISCORD_WEBHOOK_URL，只印出訊息"; }
+          python discord_push.py

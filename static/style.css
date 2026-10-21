@@ -727,6 +727,13 @@ footer { color: var(--muted); font-size: 12px; padding: 32px 0 48px; border-top:
 .mk-candles .up line, .mk-candles .up rect { stroke: var(--pos); fill: var(--pos); }
 .mk-candles .down line, .mk-candles .down rect { stroke: var(--neg); fill: var(--neg); }
 .mk-candles .last { stroke: var(--accent); stroke-dasharray: 4 4; }
+.fx-long-svg { touch-action: pan-y; cursor: crosshair; }
+.fx-long-svg .fx-dash { stroke-dasharray: 3 4; }
+.fx-long-svg polyline { fill: none; stroke: var(--accent); stroke-width: 2; }
+.fx-long-svg .fx-cross { stroke: var(--muted); stroke-dasharray: 2 3; }
+.fx-long-svg .fx-ref .fx-cross { stroke: var(--ink); }
+.fx-long-svg .fx-dot { fill: var(--accent); }
+.fx-long-svg .fx-label { font-size: 13px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; }
 .mk-tree { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: var(--line); }
 .mk-tile { position: absolute; box-sizing: border-box; border: 1px solid var(--bg); padding: 6px 8px; overflow: hidden; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
 .mk-tile b { font-size: 13px; line-height: 1.25; }

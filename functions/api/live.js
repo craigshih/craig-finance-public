@@ -1,7 +1,7 @@
 // GET /api/live?tw=2330,6274&us=NVDA,AAPL&idx=1 → { tw: {代號: 報價}, us: {美股: 報價}, idx: {指數: 報價}, updated }
 // 全站共用：頂部跑馬燈、市場頁指數、投資頁持股市值都靠它在每次開啟時更新到最新。
 
-import { INDEX_SYMBOLS, misChannels, parseMis, parseSpark, validCodes, validUs } from "../_lib/live.js";
+import { INDEX_SYMBOLS, SCALE, misChannels, parseMis, parseSpark, validCodes, validUs } from "../_lib/live.js";
 
 const UA = "Mozilla/5.0 (compatible; craig-finance-hub/1.0)";
 const TTL = 60;
@@ -56,7 +56,8 @@ export async function indices() {
   const out = {};
   for (const [sym, name] of Object.entries(INDEX_SYMBOLS)) {
     const q = tw[sym] || spark[sym];
-    if (q) out[sym] = { ...q, name };
+    const k = SCALE[sym] || 1;
+    if (q) out[sym] = { ...q, price: q.price * k, prev: q.prev * k, chg: +(q.chg * k).toFixed(4), name };
   }
   return out;
 }

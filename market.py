@@ -35,9 +35,11 @@ TPEX = "https://www.tpex.org.tw/openapi/v1"
 
 INDICES = [
     ("^TWII", "台股加權", "台"), ("TSM", "台積電 ADR", "美"), ("^SOX", "費城半導體", "美"), ("^GSPC", "S&P 500", "美"),
-    ("^IXIC", "那斯達克", "美"), ("^N225", "日經 225", "日"), ("^KS11", "韓國綜合", "韓"), ("^VIX", "VIX 恐慌指數", "美"),
+    ("^IXIC", "那斯達克", "美"), ("^N225", "日經 225", "日"), ("^KS11", "韓國綜合", "韓"), ("^STOXX50E", "歐洲 STOXX 50", "歐"), ("^VIX", "VIX 恐慌指數", "美"),
     ("CL=F", "WTI 原油", "商品"), ("DX-Y.NYB", "美元指數", "匯率"), ("TWD=X", "美元兌台幣", "匯率"),
+    ("JPYTWD=X", "100 日圓兌台幣", "匯率"), ("EURTWD=X", "歐元兌台幣", "匯率"),
 ]
+SCALE = {"JPYTWD=X": 100}  # 1 日圓約 0.2 台幣，取兩位小數看不出變化，改用 100 日圓計價（live.js 同步）
 HISTORY_DAYS = 60
 
 
@@ -88,7 +90,7 @@ def indices() -> list[dict]:
     out = []
     for ticker, name, region in INDICES:
         try:
-            df = data[ticker].dropna(subset=["Close"])
+            df = data[ticker].dropna(subset=["Close"]) * SCALE.get(ticker, 1)
         except KeyError:
             continue
         if len(df) < 2:
@@ -103,6 +105,56 @@ def indices() -> list[dict]:
                      for d, r in df.iterrows() if all(r[k] == r[k] for k in ("Open", "High", "Low", "Close"))],
         })
     return out
+
+
+# ---------- 匯率長期走勢（/fx/ 可以選時長） ----------
+
+def fx_history() -> None:
+    """匯率近 10 年的日收盤，存 fx_history.json；失敗只記錄，不影響其他資料。"""
+    import yfinance as yf
+
+    from fx_page import read_json, write_json
+
+    path = OUT_DIR / "fx_history.json"
+    today = datetime.now(TAIPEI).date().isoformat()
+    old = read_json(path)  # 檔案壞掉就當作沒有，重抓
+    if old.get("_updated") == today:
+        return  # 一天抓一次就夠；網站每 10 分鐘重建時不用每次重抓 10 年資料
+    fx = [(t, name) for t, name, region in INDICES if region == "匯率"]
+    try:
+        data = yf.download([t for t, _ in fx], period="10y", progress=False, auto_adjust=False, group_by="ticker", threads=True)
+    except Exception as exc:  # noqa: BLE001
+        log(f"⚠️ 匯率長期資料讀取失敗：{exc}")
+        return
+    out = {}
+    for t, name in fx:
+        try:
+            c = data[t]["Close"].dropna() * SCALE.get(t, 1)
+        except KeyError:
+            continue
+        if len(c) > 1:
+            out[t] = {"name": name, "closes": [[d.date().isoformat(), round(float(v), 4)] for d, v in c.items()]}
+    # 外資買賣超近 10 年（FinMind 整理的證交所三大法人，跟 history.json 的 BFI82U 同一個數字），一次一個請求
+    try:
+        r = requests.get("https://api.finmindtrade.com/api/v4/data", headers={"User-Agent": UA}, timeout=90,
+                         params={"dataset": "TaiwanStockTotalInstitutionalInvestors",
+                                 "start_date": (datetime.now(TAIPEI).date() - timedelta(days=3660)).isoformat()})
+        rows = r.json().get("data") or []
+        # 這份是全市場合計（每天每類法人一筆，沒有個股欄位）
+        flows = [[x["date"], round((x["buy"] - x["sell"]) / 1e8, 1)] for x in rows if x.get("name") == "Foreign_Investor"]
+        if flows:
+            out["_flows"] = flows
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+        log(f"⚠️ 外資長期資料讀取失敗：{exc}")
+    if not out:
+        return
+    complete = len(out) == len(fx) + 1
+    merged = {**{k: v for k, v in old.items() if k != "_updated"}, **out}  # 這次沒抓到的部分沿用舊資料
+    if complete:
+        merged["_updated"] = today  # 不完整就不標記，下次建站再試
+    write_json(path, merged)
+    log(("✅" if complete else "⚠️ 部分") + " 匯率長期資料：" + "、".join(f'{v["name"]} {len(v["closes"])} 天' for k, v in out.items() if not k.startswith("_"))
+        + f'、外資 {len(out.get("_flows") or [])} 天')
 
 
 # ---------- 產業熱力圖 ----------
@@ -326,6 +378,7 @@ def ex_dividends() -> list[dict]:
 
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    fx_history()  # 跟台股報價無關，放最前面：台股休市或報價失敗時匯率照樣更新
     stocks = quotes_and_industry()
     if len(stocks) < 800:
         log(f"❌ 當日報價只有 {len(stocks)} 檔")
@@ -353,6 +406,11 @@ def main() -> int:
         "ex_dividends": ex_dividends(),
     }
     (OUT_DIR / "latest.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    try:
+        import fx_page
+        fx_page.refresh_ai(out, OUT_DIR / "fx_ai.json")  # 匯率頁的 AI 解讀（一天一次，用 Allen 的 Groq）
+    except Exception as exc:  # noqa: BLE001
+        log(f"⚠️ 匯率 AI 解讀略過：{exc}")
     log(f"✅ 市場資料：指數 {len(out['indices'])}、產業 {len(out['industries'])}、題材 {len(out['themes'])}、"
         f"法人歷史 {len(out['history'])} 天、處置／注意 {len(out['warnings'])}、除權息 {len(out['ex_dividends'])}、"
         f"大戶 {big.get('date')}（對比 {big.get('prev')}）")
