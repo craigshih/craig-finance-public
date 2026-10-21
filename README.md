@@ -54,7 +54,8 @@ npm install && npx wrangler pages dev site               # 本機預覽（含 Fu
 
 - 部署流程在 `.github/workflows/`，需要的 secrets：`CLOUDFLARE_API_TOKEN`、`GROQ_API_KEY`（AI 文字）、`SESSION_SECRET`、
   `PORTFOLIO_PASSWORD`（顧問頁密碼）；每日一檔寄信另需 `GMAIL_USER`、`GMAIL_APP_PASSWORD`、`MAIL_TO`，LINE 推播需 `LINE_CHANNEL_SECRET`、`LINE_CHANNEL_ACCESS_TOKEN`。
-- Discord 推播（`discord.yml`，平日台北 08:30、10:30、11:30、15:45 把各區重點標題貼到頻道）需 `DISCORD_WEBHOOK_URL`；沒設定時只會印出訊息。
+- Discord 推播（`discord.yml`，平日台北 08:45、10:30、11:30、15:45 把各區重點標題貼到頻道）需 `DISCORD_WEBHOOK_URL`；沒設定時只會印出訊息。
+  Discord 標題與匯率頁 AI 解讀用另一組 Groq 金鑰 `ALLEN_GROQ_API_KEY`（不佔 `GROQ_API_KEY` 的額度）；沒設定時改用固定句型、匯率頁不顯示 AI 解讀。
 - workflow 裡 checkout `craigshih/Tim-Lu`（每日總經）與 `craigshih/investment-team`（每週研究）兩個私人 repo，沒有權限時那兩區會是空的，其他照常。
 - `build.yml` 產生 wrangler.toml 的地方，`ACCESS_TEAM_DOMAIN`、`ACCESS_AUD` 要換成你自己的 Cloudflare Access 設定。
 - 測試：`node --test tests/*.test.js`。

@@ -113,13 +113,17 @@ def fx_history() -> None:
     """匯率近 10 年的日收盤，存 fx_history.json；失敗只記錄，不影響其他資料。"""
     import yfinance as yf
 
+    path = OUT_DIR / "fx_history.json"
+    today = datetime.now(TAIPEI).date().isoformat()
+    if path.exists() and json.loads(path.read_text(encoding="utf-8")).get("_updated") == today:
+        return  # 一天抓一次就夠；網站每 10 分鐘重建時不用每次重抓 10 年資料
     fx = [(t, name) for t, name, region in INDICES if region == "匯率"]
     try:
         data = yf.download([t for t, _ in fx], period="10y", progress=False, auto_adjust=False, group_by="ticker", threads=True)
     except Exception as exc:  # noqa: BLE001
         log(f"⚠️ 匯率長期資料讀取失敗：{exc}")
         return
-    out = {}
+    out = {"_updated": today}
     for t, name in fx:
         try:
             c = data[t]["Close"].dropna() * SCALE.get(t, 1)
@@ -127,9 +131,9 @@ def fx_history() -> None:
             continue
         if len(c) > 1:
             out[t] = {"name": name, "closes": [[d.date().isoformat(), round(float(v), 4)] for d, v in c.items()]}
-    if out:
-        (OUT_DIR / "fx_history.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-        log("✅ 匯率長期資料：" + "、".join(f'{v["name"]} {len(v["closes"])} 天' for v in out.values()))
+    if len(out) > 1:
+        path.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        log("✅ 匯率長期資料：" + "、".join(f'{v["name"]} {len(v["closes"])} 天' for k, v in out.items() if k != "_updated"))
 
 
 # ---------- 產業熱力圖 ----------
@@ -381,6 +385,11 @@ def main() -> int:
         "ex_dividends": ex_dividends(),
     }
     (OUT_DIR / "latest.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    try:
+        import fx_page
+        fx_page.refresh_ai(out, OUT_DIR / "fx_ai.json")  # 匯率頁的 AI 解讀（一天一次，用 Allen 的 Groq）
+    except Exception as exc:  # noqa: BLE001
+        log(f"⚠️ 匯率 AI 解讀略過：{exc}")
     log(f"✅ 市場資料：指數 {len(out['indices'])}、產業 {len(out['industries'])}、題材 {len(out['themes'])}、"
         f"法人歷史 {len(out['history'])} 天、處置／注意 {len(out['warnings'])}、除權息 {len(out['ex_dividends'])}、"
         f"大戶 {big.get('date')}（對比 {big.get('prev')}）")

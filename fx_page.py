@@ -2,10 +2,13 @@
 
 資料全部來自 market.py 已經抓的指數日線（data/market/latest.json），這裡不另外抓資料。
 AI 解讀跟 Discord 標題同一套規則：只能用這頁算出來的數字、不預測漲跌、不給買賣建議。
+AI 解讀由 market.py 呼叫 refresh_ai() 一天最多產生一次、存成 fx_ai.json；建站只讀檔（網站每 10 分鐘重建也不會一直呼叫 AI）。
 """
 import json
 import statistics
 import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from market_page import TAB_SCRIPT, cls, e, flow_bars, index_board, tabs
 
@@ -227,7 +230,23 @@ def ai_view(f: dict) -> str:
     return text
 
 
-def render(m: dict | None, hero, section, hist: dict | None = None) -> str:
+def refresh_ai(m: dict, path: Path) -> None:
+    """台北 15:30 後（台股收盤資料齊了）每天最多試一次；失敗就沿用舊的一段，當天不再重試。"""
+    import picks
+
+    if not picks.GROQ_API_KEY:
+        return  # 沒有金鑰不記錄，等金鑰設好當天就能產生
+    now = datetime.now(timezone(timedelta(hours=8)))
+    today = now.date().isoformat()
+    old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    if old.get("date") == today or (old and now.strftime("%H%M") < "1530"):
+        return
+    text = ai_view(facts(m, correlations(m) + correlations(m, HEDGE)))
+    path.write_text(json.dumps({"date": today, "text": text or old.get("text", ""), "made": today if text else old.get("made")},
+                               ensure_ascii=False), encoding="utf-8")
+
+
+def render(m: dict | None, hero, section, hist: dict | None = None, ai: dict | None = None) -> str:
     fx = [i for i in (m or {}).get("indices") or [] if i["region"] == "匯率"]
     if not fx:
         return hero("匯率", "匯率資料準備中", "下一次網站更新後就會出現。")
@@ -236,9 +255,8 @@ def render(m: dict | None, hero, section, hist: dict | None = None) -> str:
     body += '<main class="wrap">'
     body += section("匯率走勢", index_board(fx, "fx"), '<span class="live-dot"></span><span class="live-stamp">盤中即時更新</span>・點卡片看近半年日 K・台幣匯率數字越大＝台幣越弱')
     body += section("長期走勢", long_chart(hist), "選幣別與時長・最長近 10 年日收盤")
-    view = ai_view(facts(m, cs + hedge))
-    if view:
-        body += section("AI 解讀", f'<p>{e(view)}</p>', "AI 依本頁數字整理，僅供學習研究，不構成投資建議")
+    if (ai or {}).get("text"):
+        body += section("AI 解讀", f'<p>{e(ai["text"])}</p>', f'{e(ai.get("made") or "")} 依當時數字整理・每天收盤後更新・僅供學習研究，不構成投資建議')
     body += section("匯率與股市連動", corr_table(cs), "美元／台幣 vs 台股・100 日圓／台幣 vs 日經・歐元／台幣 vs 歐洲 STOXX 50・美元指數 vs S&P 500")
     body += section("避險情緒", corr_table(hedge, ("恐慌指標", "匯率")), "市場緊張時，資金常流向日圓、美元：看 VIX 上升的日子，日圓、美元是否同步走強")
     body += section("外資進出 vs 台幣", flows_vs_twd(m), "上：外資買賣超（上市，億元）・下：美元兌台幣收盤")

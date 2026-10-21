@@ -155,6 +155,8 @@ jobs:
       - name: Market data
         continue-on-error: true
         timeout-minutes: 8
+        env:
+          GROQ_API_KEY: ${{ secrets.ALLEN_GROQ_API_KEY }}   # 匯率頁 AI 解讀用 Allen 自己的 Groq（一天一次）；沒有就不顯示那一段
         run: python market.py
 
       # 台股進階：誰在推指數、估值歷史位置、期貨籌碼（歷史檔存在 data/market/，每次只補新的）
@@ -217,7 +219,6 @@ jobs:
       - run: python build.py
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}   # 匯率頁的 AI 解讀；沒有就不顯示那一段
 
       - name: Unit tests
         run: npm test
