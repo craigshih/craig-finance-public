@@ -7,7 +7,7 @@ import json
 import statistics
 import sys
 
-from market_page import TAB_SCRIPT, cls, e, flow_bars, index_board
+from market_page import TAB_SCRIPT, cls, e, flow_bars, index_board, tabs
 
 # (匯率, 「數字上升」代表什麼, 對照的股市)
 PAIRS = [("TWD=X", "台幣轉弱", "^TWII"), ("JPYTWD=X", "日圓走強", "^N225"),
@@ -72,6 +72,59 @@ def flows_vs_twd(m: dict, w=1000, h=160) -> str:
     return flow_bars(hist, "foreign") + line
 
 
+RANGES = [("90", "3 個月"), ("365", "1 年"), ("1095", "3 年"), ("1825", "5 年"), ("3650", "10 年")]
+
+LONG_SCRIPT = """<script>
+(() => {
+  const box = document.getElementById("fx-long");
+  if (!box) return;
+  const data = JSON.parse(document.getElementById("fx-long-data").textContent);
+  let cur = box.querySelector('[data-tabs="fxcur"] .on').dataset.tab, days = +box.querySelector('[data-tabs="fxrange"] .on').dataset.tab;
+  const fmt = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: v < 10 ? 3 : 2 });
+  function draw() {
+    const all = data[cur].closes, end = new Date(all[all.length - 1][0]);
+    const from = new Date(end - days * 864e5).toISOString().slice(0, 10);
+    const pts = all.filter((r) => r[0] >= from);
+    const vs = pts.map((r) => r[1]), lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || 1;
+    const W = 1000, H = 260;
+    box.querySelector("polyline").setAttribute("points", pts.map((r, i) =>
+      `${(i / (pts.length - 1) * W).toFixed(1)},${(H - 8 - (r[1] - lo) / span * (H - 16)).toFixed(1)}`).join(" "));
+    // 年化波動率：日對數報酬的標準差 × √252
+    const rs = vs.slice(1).map((v, i) => Math.log(v / vs[i])), mean = rs.reduce((a, b) => a + b, 0) / rs.length;
+    const vol = Math.sqrt(rs.reduce((a, b) => a + (b - mean) ** 2, 0) / (rs.length - 1) * 252) * 100;
+    const chg = (vs[vs.length - 1] / vs[0] - 1) * 100;
+    const at = (v) => pts[vs.indexOf(v)][0];
+    box.querySelector(".mk-axis").innerHTML = `<span>${pts[0][0]}</span><span>${data[cur].name} ${fmt(lo)}～${fmt(hi)}</span><span>${pts[pts.length - 1][0]}</span>`;
+    const tile = (k, v, foot, c = "") => `<div class="stat"><div class="stat-label">${k}</div><div class="stat-value ${c}">${v}</div><div class="stat-foot"><span>${foot}</span></div></div>`;
+    box.querySelector(".stats").innerHTML =
+      tile("期間漲跌", `${chg > 0 ? "+" : ""}${chg.toFixed(2)}%`, `${fmt(vs[0])} → ${fmt(vs[vs.length - 1])}`, chg > 0 ? "pos" : chg < 0 ? "neg" : "") +
+      tile("期間最高", fmt(hi), at(hi)) + tile("期間最低", fmt(lo), at(lo)) +
+      tile("高低差", `${((hi / lo - 1) * 100).toFixed(1)}%`, "最高比最低多幾 %") +
+      tile("年化波動率", `${vol.toFixed(1)}%`, "日漲跌的標準差 × √252");
+  }
+  box.addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-tab]");
+    if (!b) return;
+    if (b.closest('[data-tabs="fxcur"]')) cur = b.dataset.tab; else days = +b.dataset.tab;
+    draw();
+  });
+  draw();
+})();
+</script>"""
+
+
+def long_chart(hist: dict | None) -> str:
+    """匯率長期走勢：選幣別、選時長，前端畫線並算期間漲跌、高低點與年化波動率。"""
+    if not hist:
+        return '<p class="empty">長期資料暫時讀不到</p>'
+    keys = [t for t, *_ in PAIRS if t in hist]
+    data = json.dumps(hist, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    return (f'<div id="fx-long">{tabs("fxcur", [(t, hist[t]["name"]) for t in keys], keys[0])} {tabs("fxrange", RANGES, "1095")}'
+            '<svg class="mk-line" viewBox="0 0 1000 260" preserveAspectRatio="none"><polyline points=""/></svg>'
+            '<div class="mk-axis"></div><div class="stats"></div></div>'
+            f'<script type="application/json" id="fx-long-data">{data}</script>{LONG_SCRIPT}')
+
+
 def facts(m: dict, cs: list[dict]) -> dict:
     ix = {i["ticker"]: i for i in m.get("indices") or []}
     hist = (m.get("history") or [])[-5:]
@@ -113,7 +166,7 @@ def ai_view(f: dict) -> str:
     return text
 
 
-def render(m: dict | None, hero, section) -> str:
+def render(m: dict | None, hero, section, hist: dict | None = None) -> str:
     fx = [i for i in (m or {}).get("indices") or [] if i["region"] == "匯率"]
     if not fx:
         return hero("匯率", "匯率資料準備中", "下一次網站更新後就會出現。")
@@ -121,6 +174,7 @@ def render(m: dict | None, hero, section) -> str:
     body = hero("匯率", "台幣跟著誰走", f"台幣兌美元、日圓、歐元的走勢，以及匯率和各地股市的連動・資料日 {e(fx[0]['date'])}")
     body += '<main class="wrap">'
     body += section("匯率走勢", index_board(fx, "fx"), '<span class="live-dot"></span><span class="live-stamp">盤中即時更新</span>・點卡片看近半年日 K・台幣匯率數字越大＝台幣越弱')
+    body += section("長期走勢", long_chart(hist), "選幣別與時長・最長近 10 年日收盤")
     view = ai_view(facts(m, cs))
     if view:
         body += section("AI 解讀", f'<p>{e(view)}</p>', "AI 依本頁數字整理，僅供學習研究，不構成投資建議")

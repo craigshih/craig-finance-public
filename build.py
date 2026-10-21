@@ -967,7 +967,7 @@ def main() -> int:
     if not picks_all:
         write(OUT_DIR / "pick" / "index.html", page("每日一檔", hero("每日一檔", "準備中", "第一篇明天早上 9 點前產生。"), 1, "pick/index.html"))
     import fx_page
-    write(OUT_DIR / "fx" / "index.html", page("匯率", fx_page.render(market, hero, section), 1, "fx/index.html"))
+    write(OUT_DIR / "fx" / "index.html", page("匯率", fx_page.render(market, hero, section, market_page.load(ROOT / "data" / "market" / "fx_history.json")), 1, "fx/index.html"))
     import us_page
     us_data = market_page.load(ROOT / "data" / "us" / "latest.json")
     write(OUT_DIR / "us" / "index.html", page("美股", us_page.render(us_data, hero, section, datetime.now(TAIPEI).strftime("%Y-%m-%d")), 1, "us/index.html"))

@@ -107,6 +107,31 @@ def indices() -> list[dict]:
     return out
 
 
+# ---------- 匯率長期走勢（/fx/ 可以選時長） ----------
+
+def fx_history() -> None:
+    """匯率近 10 年的日收盤，存 fx_history.json；失敗只記錄，不影響其他資料。"""
+    import yfinance as yf
+
+    fx = [(t, name) for t, name, region in INDICES if region == "匯率"]
+    try:
+        data = yf.download([t for t, _ in fx], period="10y", progress=False, auto_adjust=False, group_by="ticker", threads=True)
+    except Exception as exc:  # noqa: BLE001
+        log(f"⚠️ 匯率長期資料讀取失敗：{exc}")
+        return
+    out = {}
+    for t, name in fx:
+        try:
+            c = data[t]["Close"].dropna() * SCALE.get(t, 1)
+        except KeyError:
+            continue
+        if len(c) > 1:
+            out[t] = {"name": name, "closes": [[d.date().isoformat(), round(float(v), 4)] for d, v in c.items()]}
+    if out:
+        (OUT_DIR / "fx_history.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        log("✅ 匯率長期資料：" + "、".join(f'{v["name"]} {len(v["closes"])} 天' for v in out.values()))
+
+
 # ---------- 產業熱力圖 ----------
 
 def quotes_and_industry() -> list[dict]:
@@ -328,6 +353,7 @@ def ex_dividends() -> list[dict]:
 
 def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+    fx_history()  # 跟台股報價無關，放最前面：台股休市或報價失敗時匯率照樣更新
     stocks = quotes_and_industry()
     if len(stocks) < 800:
         log(f"❌ 當日報價只有 {len(stocks)} 檔")
