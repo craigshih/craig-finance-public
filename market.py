@@ -131,9 +131,19 @@ def fx_history() -> None:
             continue
         if len(c) > 1:
             out[t] = {"name": name, "closes": [[d.date().isoformat(), round(float(v), 4)] for d, v in c.items()]}
+    # 外資買賣超近 10 年（FinMind 整理的證交所三大法人，跟 history.json 的 BFI82U 同一個數字），一次一個請求
+    try:
+        r = requests.get("https://api.finmindtrade.com/api/v4/data", headers={"User-Agent": UA}, timeout=90,
+                         params={"dataset": "TaiwanStockTotalInstitutionalInvestors",
+                                 "start_date": (datetime.now(TAIPEI).date() - timedelta(days=3660)).isoformat()})
+        rows = r.json().get("data") or []
+        out["_flows"] = [[x["date"], round((x["buy"] - x["sell"]) / 1e8, 1)] for x in rows if x.get("name") == "Foreign_Investor"]
+    except (requests.RequestException, ValueError) as exc:
+        log(f"⚠️ 外資長期資料讀取失敗：{exc}")
     if len(out) > 1:
         path.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-        log("✅ 匯率長期資料：" + "、".join(f'{v["name"]} {len(v["closes"])} 天' for k, v in out.items() if k != "_updated"))
+        log("✅ 匯率長期資料：" + "、".join(f'{v["name"]} {len(v["closes"])} 天' for k, v in out.items() if not k.startswith("_"))
+            + f'、外資 {len(out.get("_flows") or [])} 天')
 
 
 # ---------- 產業熱力圖 ----------

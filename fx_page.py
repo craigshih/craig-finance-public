@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from market_page import TAB_SCRIPT, cls, e, flow_bars, index_board, tabs
+from market_page import TAB_SCRIPT, cls, e, index_board, tabs
 
 # (匯率, 「數字上升」代表什麼, 對照的股市)
 PAIRS = [("TWD=X", "台幣轉弱", "^TWII"), ("JPYTWD=X", "日圓走強", "^N225"),
@@ -58,119 +58,177 @@ def corr_table(cs: list[dict], head=("匯率", "股市")) -> str:
             f'<p class="mk-note">每日漲跌幅的相關係數，介於 -1 到 +1；近 {cs[0]["n"]} 個共同交易日的統計，不代表未來。</p>')
 
 
-def flows_vs_twd(m: dict, w=1000, h=160) -> str:
-    """外資買賣超（柱）跟同一段期間的美元兌台幣（線），x 軸對齊同一天。"""
-    hist = m.get("history") or []
-    twd = next((i for i in m.get("indices") or [] if i["ticker"] == "TWD=X"), None)
-    if not hist or not twd:
-        return '<p class="empty">資料暫時讀不到</p>'
-    close = {d: c for d, *_, c in twd["ohlc"]}
-    pts = [(i, close[x["date"]]) for i, x in enumerate(hist) if x["date"] in close]
-    line = ""
-    if len(pts) >= 2:
-        lo, hi = min(v for _, v in pts), max(v for _, v in pts)
-        span, n = hi - lo or 1, len(hist) - 1 or 1
-        # 柱子畫在每格中間，線也對到每格中間
-        poly = " ".join(f"{(i + 0.5) / (n + 1) * w:.1f},{h - 8 - (v - lo) / span * (h - 16):.1f}" for i, v in pts)
-        line = (f'<svg class="mk-line" viewBox="0 0 {w} {h}" preserveAspectRatio="none"><polyline points="{poly}"/></svg>'
-                f'<div class="mk-axis"><span>{e(hist[0]["date"])}</span><span>美元兌台幣 {lo:.2f}～{hi:.2f}（越高＝台幣越弱）</span><span>{e(hist[-1]["date"])}</span></div>')
-    return flow_bars(hist, "foreign") + line
-
-
 RANGES = [("90", "3 個月"), ("365", "1 年"), ("1095", "3 年"), ("1825", "5 年"), ("3650", "10 年")]
 
-LONG_SCRIPT = """<script>
+# 兩張可調時長的圖共用：長期匯率（線）、外資買賣超（柱）vs 美元兌台幣（線）
+CHART_SCRIPT = """<script>
 (() => {
-  const box = document.getElementById("fx-long");
-  if (!box) return;
-  const data = JSON.parse(document.getElementById("fx-long-data").textContent);
-  const svg = box.querySelector("svg"), tip = box.querySelector(".fx-tip");
-  let cur = box.querySelector('[data-tabs="fxcur"] .on').dataset.tab, days = +box.querySelector('[data-tabs="fxrange"] .on').dataset.tab;
-  let pts = [], ref = null;
-  const W = 1000, H = 300, R = 64, B = 24, T = 8;  // 右邊留給價格刻度、下面留給日期
-  const fmt = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: v < 10 ? 3 : 2 });
-  let lo, hi, x, y;
+  const blob = document.getElementById("fx-long-data");
+  if (!blob) return;
+  const data = JSON.parse(blob.textContent);
+  const W = 1000, R = 64;  // 右邊留給刻度
   const el = (tag, attrs, text) => {
     const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
     for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
     if (text != null) n.textContent = text;
     return n;
   };
-  function draw() {
-    const all = data[cur].closes, end = new Date(all[all.length - 1][0]);
+  const fmt = (v) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: v < 10 ? 3 : 2 });
+  const yi = (v) => `${v > 0 ? "+" : ""}${v.toLocaleString("en-US", { maximumFractionDigits: 1 })} 億`;
+  const pct = (a, b) => `${b >= a ? "+" : ""}${((b / a - 1) * 100).toFixed(2)}%`;
+  const since = (rows, days) => {
+    const end = new Date(rows[rows.length - 1][0]);
     const from = new Date(end - days * 864e5).toISOString().slice(0, 10);
-    pts = all.filter((r) => r[0] >= from);
-    const vs = pts.map((r) => r[1]);
-    lo = Math.min(...vs); hi = Math.max(...vs);
-    const span = hi - lo || 1;
-    x = (i) => i / (pts.length - 1) * (W - R);
-    y = (v) => T + (hi - v) / span * (H - B - T * 2);
-    svg.replaceChildren();
-    // 價格虛線：5 條等距，右邊標價格
-    for (let k = 0; k < 5; k++) {
-      const v = lo + span * k / 4;
-      svg.append(el("line", { class: "grid fx-dash", x1: 0, x2: W - R, y1: y(v), y2: y(v) }), el("text", { class: "ax", x: W - R + 6, y: y(v) + 4 }, fmt(v)));
+    return rows.filter((r) => r[0] >= from);
+  };
+  const tile = (k, v, foot, c = "") => `<div class="stat"><div class="stat-label">${k}</div><div class="stat-value ${c}">${v}</div><div class="stat-foot"><span>${foot}</span></div></div>`;
+  const tone = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
+  // 價格虛線：右邊標數字
+  const hgrid = (svg, lo, hi, y, n, f) => {
+    for (let k = 0; k < n; k++) {
+      const v = lo + (hi - lo) * k / (n - 1);
+      svg.append(el("line", { class: "grid fx-dash", x1: 0, x2: W - R, y1: y(v), y2: y(v) }), el("text", { class: "ax", x: W - R + 6, y: y(v) + 4 }, f(v)));
     }
-    // 時間刻度：約 6 個，短期標月/日、長期標年-月
+  };
+  // 時間刻度：約 6 段，短期標月/日、長期標年-月
+  const vticks = (svg, keys, x, top, bottom, days) => {
     const n = 6;
     for (let k = 0; k <= n; k++) {
-      const i = Math.round(k / n * (pts.length - 1)), d = pts[i][0];
-      svg.append(el("line", { class: "grid fx-dash", x1: x(i), x2: x(i), y1: T, y2: H - B }),
-        el("text", { class: "ax", x: x(i), y: H - 6, "text-anchor": k === 0 ? "start" : k === n ? "end" : "middle" },
-          days <= 365 ? `${+d.slice(5, 7)}/${+d.slice(8)}` : d.slice(0, 7)));
+      const i = Math.round(k / n * (keys.length - 1)), d = keys[i];
+      svg.append(el("line", { class: "grid fx-dash", x1: x(i), x2: x(i), y1: top, y2: bottom }),
+        el("text", { class: "ax", x: x(i), y: bottom + 18, "text-anchor": k === 0 ? "start" : k === n ? "end" : "middle" },
+          days <= 365 ? `${+d.slice(5, 7)}/${+d.slice(8, 10) || 1}` : d.slice(0, 7)));
     }
-    const last = vs[vs.length - 1];
-    svg.append(el("line", { class: "last", x1: 0, x2: W - R, y1: y(last), y2: y(last) }),
-      el("polyline", { points: pts.map((r, i) => `${x(i).toFixed(1)},${y(r[1]).toFixed(1)}`).join(" ") }));
-    ref = null;
-    svg.append(el("g", { class: "fx-ref" }), el("g", { class: "fx-hover" }));
-    tip.textContent = "滑過圖表看當天價格・點一下留下一條基準線，再滑到其他日期比較";
-    // 年化波動率：日對數報酬的標準差 × √252
-    const rs = vs.slice(1).map((v, i) => Math.log(v / vs[i])), mean = rs.reduce((a, b) => a + b, 0) / rs.length;
-    const vol = Math.sqrt(rs.reduce((a, b) => a + (b - mean) ** 2, 0) / (rs.length - 1) * 252) * 100;
-    const chg = (last / vs[0] - 1) * 100;
-    const at = (v) => pts[vs.indexOf(v)][0];
-    const tile = (k, v, foot, c = "") => `<div class="stat"><div class="stat-label">${k}</div><div class="stat-value ${c}">${v}</div><div class="stat-foot"><span>${foot}</span></div></div>`;
-    box.querySelector(".stats").innerHTML =
-      tile("期間漲跌", `${chg > 0 ? "+" : ""}${chg.toFixed(2)}%`, `${pts[0][0]} ${fmt(vs[0])} → ${fmt(last)}`, chg > 0 ? "pos" : chg < 0 ? "neg" : "") +
-      tile("期間最高", fmt(hi), at(hi)) + tile("期間最低", fmt(lo), at(lo)) +
-      tile("高低差", `${((hi / lo - 1) * 100).toFixed(1)}%`, "最高比最低多幾 %") +
-      tile("年化波動率", `${vol.toFixed(1)}%`, "日漲跌的標準差 × √252");
+  };
+  const label = (g, x, y, text) => g.append(el("text", { class: "fx-label", x: Math.min(x + 8, W - R - 230), y: Math.max(y - 8, 16) }, text));
+  // 共用的互動：時長／幣別按鈕、滑過看數字、點一下留基準
+  function wire(box, state, draw, show) {
+    const svg = box.querySelector("svg"), tip = box.querySelector(".fx-tip");
+    const at = (ev) => {
+      const p = ev.touches ? ev.touches[0] : ev, r = svg.getBoundingClientRect();
+      return state.index((p.clientX - r.left) / r.width * W);
+    };
+    const move = (ev) => { const i = at(ev); tip.textContent = show(svg.querySelector(".fx-hover"), i, state.ref); };
+    svg.addEventListener("mousemove", move);
+    svg.addEventListener("touchmove", move, { passive: true });
+    svg.addEventListener("click", (ev) => { state.ref = at(ev); show(svg.querySelector(".fx-ref"), state.ref, null, true); move(ev); });
+    box.addEventListener("click", (ev) => {
+      const b = ev.target.closest("[data-tab]");
+      if (!b) return;
+      state[b.closest("[data-tabs]").dataset.tabs.endsWith("range") ? "days" : "cur"] = b.dataset.tab;
+      state.ref = null; draw(svg, tip);
+    });
+    draw(svg, tip);
   }
-  // 滑鼠／手指位置 → 最接近的那一天
-  const pick = (ev) => {
-    const p = ev.touches ? ev.touches[0] : ev, r = svg.getBoundingClientRect();
-    const px = (p.clientX - r.left) / r.width * W;
-    return Math.max(0, Math.min(pts.length - 1, Math.round(px / (W - R) * (pts.length - 1))));
-  };
-  const mark = (g, i, label) => {
-    const [d, v] = pts[i];
-    g.replaceChildren(el("line", { class: "fx-cross", x1: 0, x2: W - R, y1: y(v), y2: y(v) }),
-      el("line", { class: "fx-cross", x1: x(i), x2: x(i), y1: T, y2: H - B }),
-      el("circle", { class: "fx-dot", cx: x(i), cy: y(v), r: 4 }),
-      el("text", { class: "fx-label", x: Math.min(x(i) + 8, W - R - 150), y: Math.max(y(v) - 8, 16) }, label || `${d}  ${fmt(v)}`));
-  };
-  const move = (ev) => {
-    if (!pts.length) return;
-    const i = pick(ev), [d, v] = pts[i];
-    mark(svg.querySelector(".fx-hover"), i);
-    tip.textContent = ref ? `${d}　${fmt(v)}　比基準（${ref[0]} ${fmt(ref[1])}）${v >= ref[1] ? "+" : ""}${((v / ref[1] - 1) * 100).toFixed(2)}%` : `${d}　${fmt(v)}`;
-  };
-  svg.addEventListener("mousemove", move);
-  svg.addEventListener("touchmove", move, { passive: true });
-  svg.addEventListener("click", (ev) => {
-    const i = pick(ev);
-    ref = pts[i];
-    mark(svg.querySelector(".fx-ref"), i, `基準 ${ref[0]}  ${fmt(ref[1])}`);
-    move(ev);
-  });
-  box.addEventListener("click", (ev) => {
-    const b = ev.target.closest("[data-tab]");
-    if (!b) return;
-    if (b.closest('[data-tabs="fxcur"]')) cur = b.dataset.tab; else days = +b.dataset.tab;
-    draw();
-  });
-  draw();
+  const HINT = "滑過圖表看當天數字・點一下留下一條基準線，再滑到其他日期比較";
+
+  // ---- 長期匯率 ----
+  const lbox = document.getElementById("fx-long");
+  if (lbox) {
+    const s = { cur: lbox.querySelector('[data-tabs="fxcur"] .on').dataset.tab, days: lbox.querySelector('[data-tabs="fxrange"] .on').dataset.tab, ref: null };
+    const H = 300, B = 24, T = 8;
+    let pts, x, y;
+    s.index = (px) => Math.max(0, Math.min(pts.length - 1, Math.round(px / (W - R) * (pts.length - 1))));
+    const draw = (svg, tip) => {
+      pts = since(data[s.cur].closes, +s.days);
+      const vs = pts.map((r) => r[1]), lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || 1, last = vs[vs.length - 1];
+      x = (i) => i / (pts.length - 1) * (W - R);
+      y = (v) => T + (hi - v) / span * (H - B - T * 2);
+      svg.replaceChildren();
+      hgrid(svg, lo, hi, y, 5, fmt);
+      vticks(svg, pts.map((r) => r[0]), x, T, H - B, +s.days);
+      svg.append(el("line", { class: "last", x1: 0, x2: W - R, y1: y(last), y2: y(last) }),
+        el("polyline", { points: pts.map((r, i) => `${x(i).toFixed(1)},${y(r[1]).toFixed(1)}`).join(" ") }),
+        el("g", { class: "fx-ref" }), el("g", { class: "fx-hover" }));
+      tip.textContent = HINT;
+      // 年化波動率：日對數報酬的標準差 × √252
+      const rs = vs.slice(1).map((v, i) => Math.log(v / vs[i])), mean = rs.reduce((a, b) => a + b, 0) / rs.length;
+      const vol = Math.sqrt(rs.reduce((a, b) => a + (b - mean) ** 2, 0) / (rs.length - 1) * 252) * 100;
+      const chg = (last / vs[0] - 1) * 100, when = (v) => pts[vs.indexOf(v)][0];
+      lbox.querySelector(".stats").innerHTML =
+        tile("期間漲跌", `${chg > 0 ? "+" : ""}${chg.toFixed(2)}%`, `${pts[0][0]} ${fmt(vs[0])} → ${fmt(last)}`, tone(chg)) +
+        tile("期間最高", fmt(hi), when(hi)) + tile("期間最低", fmt(lo), when(lo)) +
+        tile("高低差", `${((hi / lo - 1) * 100).toFixed(1)}%`, "最高比最低多幾 %") +
+        tile("年化波動率", `${vol.toFixed(1)}%`, "日漲跌的標準差 × √252");
+    };
+    const show = (g, i, ref, pin) => {
+      const [d, v] = pts[i];
+      g.replaceChildren(el("line", { class: "fx-cross", x1: 0, x2: W - R, y1: y(v), y2: y(v) }),
+        el("line", { class: "fx-cross", x1: x(i), x2: x(i), y1: T, y2: H - B }), el("circle", { class: "fx-dot", cx: x(i), cy: y(v), r: 4 }));
+      label(g, x(i), y(v), `${pin ? "基準 " : ""}${d}  ${fmt(v)}`);
+      return ref == null ? `${d}　${fmt(v)}` : `${d}　${fmt(v)}　比基準（${pts[ref][0]} ${fmt(pts[ref][1])}）${pct(pts[ref][1], v)}`;
+    };
+    wire(lbox, s, draw, show);
+  }
+
+  // ---- 外資買賣超 vs 美元兌台幣：1 年內每日、3 年內每週、更長每月加總 ----
+  const fbox = document.getElementById("fx-flows");
+  if (fbox && data._flows && data["TWD=X"]) {
+    const s = { days: fbox.querySelector('[data-tabs="flowrange"] .on').dataset.tab, ref: null };
+    const H = 360, T = 8, MID = 170, L0 = 192, L1 = 330;  // 上半柱狀、下半折線
+    const twd = new Map(data["TWD=X"].closes);
+    let gs, x, yb, yl, unit;
+    s.index = (px) => Math.max(0, Math.min(gs.length - 1, Math.floor(px / (W - R) * gs.length)));
+    const bucket = (d) => {
+      if (unit === "日") return d;
+      if (unit === "月") return d.slice(0, 7);
+      const t = new Date(d); t.setUTCDate(t.getUTCDate() - (t.getUTCDay() + 6) % 7);
+      return t.toISOString().slice(0, 10);
+    };
+    const draw = (svg, tip) => {
+      const days = +s.days;
+      unit = days <= 365 ? "日" : days <= 1095 ? "週" : "月";
+      const rows = since(data._flows, days);
+      gs = [];
+      let lastTwd = null;
+      for (const [d, v] of rows) {
+        if (twd.has(d)) lastTwd = twd.get(d);
+        const k = bucket(d), g = gs[gs.length - 1];
+        if (g && g.k === k) { g.v += v; g.n += 1; g.twd = lastTwd ?? g.twd; } else gs.push({ k, v, n: 1, twd: lastTwd, from: d });
+      }
+      const m = Math.max(...gs.map((g) => Math.abs(g.v))) || 1, ls = gs.filter((g) => g.twd != null).map((g) => g.twd);
+      const lo = Math.min(...ls), hi = Math.max(...ls), span = hi - lo || 1, bw = (W - R) / gs.length;
+      x = (i) => (i + 0.5) * bw;
+      const zero = (T + MID) / 2;
+      yb = (v) => zero - v / m * (zero - T);
+      yl = (v) => L0 + (hi - v) / span * (L1 - L0);
+      svg.replaceChildren();
+      hgrid(svg, -m, m, yb, 3, (v) => `${Math.round(v).toLocaleString("en-US")} 億`);
+      hgrid(svg, lo, hi, yl, 3, fmt);
+      vticks(svg, gs.map((g) => g.from), x, T, L1, days);
+      for (const [i, g] of gs.entries()) {
+        const top = Math.min(yb(g.v), zero), h = Math.max(Math.abs(yb(g.v) - zero), 0.6);
+        const bar = el("g", { class: g.v > 0 ? "up" : "down" });
+        bar.append(el("rect", { x: x(i) - bw * 0.35, y: top, width: Math.max(bw * 0.7, 0.6), height: h }));
+        svg.append(bar);
+      }
+      svg.append(el("polyline", { points: gs.map((g, i) => g.twd == null ? null : `${x(i).toFixed(1)},${yl(g.twd).toFixed(1)}`).filter(Boolean).join(" ") }),
+        el("g", { class: "fx-ref" }), el("g", { class: "fx-hover" }));
+      tip.textContent = `${unit === "日" ? "每日" : `每${unit}加總`}・${HINT}`;
+      const sum = rows.reduce((a, r) => a + r[1], 0), buy = rows.filter((r) => r[1] > 0).length;
+      const best = rows.reduce((a, r) => (r[1] > a[1] ? r : a)), worst = rows.reduce((a, r) => (r[1] < a[1] ? r : a));
+      fbox.querySelector(".stats").innerHTML =
+        tile("期間外資累計", yi(Math.round(sum * 10) / 10), `${rows[0][0]} 起`, tone(sum)) +
+        tile("買超／賣超天數", `${buy}／${rows.length - buy}`, `共 ${rows.length} 個交易日`) +
+        tile("最大單日買超", yi(best[1]), best[0], "pos") + tile("最大單日賣超", yi(worst[1]), worst[0], "neg") +
+        tile("美元兌台幣", ls.length ? `${ls[0] <= ls[ls.length - 1] ? "+" : ""}${((ls[ls.length - 1] / ls[0] - 1) * 100).toFixed(2)}%` : "—",
+          ls.length ? `${fmt(ls[0])} → ${fmt(ls[ls.length - 1])}（正＝台幣轉弱）` : "");
+    };
+    const show = (g, i, ref, pin) => {
+      const b = gs[i], name = unit === "週" ? `${b.k} 當週` : b.k;
+      g.replaceChildren(el("line", { class: "fx-cross", x1: x(i), x2: x(i), y1: T, y2: L1 }));
+      if (b.twd != null) g.append(el("line", { class: "fx-cross", x1: 0, x2: W - R, y1: yl(b.twd), y2: yl(b.twd) }), el("circle", { class: "fx-dot", cx: x(i), cy: yl(b.twd), r: 4 }));
+      label(g, x(i), b.twd != null ? yl(b.twd) : L0, `${pin ? "基準 " : ""}${name}  外資 ${yi(Math.round(b.v * 10) / 10)}  台幣 ${b.twd != null ? fmt(b.twd) : "—"}`);
+      let text = `${name}　外資 ${yi(Math.round(b.v * 10) / 10)}${unit === "日" ? "" : `（${unit}合計）`}　美元兌台幣 ${b.twd != null ? fmt(b.twd) : "—"}`;
+      if (ref != null && ref !== i) {
+        const [a, z] = ref < i ? [ref, i] : [i, ref], cum = gs.slice(a + 1, z + 1).reduce((t, x) => t + x.v, 0);
+        text += `　｜比基準（${gs[ref].k}）：外資累計 ${yi(Math.round((ref < i ? cum : -cum) * 10) / 10)}`;
+        if (b.twd != null && gs[ref].twd != null) text += `、美元兌台幣 ${pct(gs[ref].twd, b.twd)}`;
+      }
+      return text;
+    };
+    wire(fbox, s, draw, show);
+  }
 })();
 </script>"""
 
@@ -180,11 +238,29 @@ def long_chart(hist: dict | None) -> str:
     if not hist:
         return '<p class="empty">長期資料暫時讀不到</p>'
     keys = [t for t, *_ in PAIRS if t in hist]
-    data = json.dumps(hist, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     return (f'<div id="fx-long">{tabs("fxcur", [(t, hist[t]["name"]) for t in keys], keys[0])} {tabs("fxrange", RANGES, "1095")}'
             '<div class="mk-chart"><svg class="mk-candles fx-long-svg" viewBox="0 0 1000 300" role="img" aria-label="匯率長期走勢"></svg>'
-            '<p class="mk-note fx-tip"></p></div><div class="stats"></div></div>'
-            f'<script type="application/json" id="fx-long-data">{data}</script>{LONG_SCRIPT}')
+            '<p class="mk-note fx-tip"></p></div><div class="stats"></div></div>')
+
+
+def flows_chart(hist: dict | None, m: dict) -> str:
+    """外資買賣超 vs 美元兌台幣：選時長；10 年資料（fx_history.json）再補上 history.json 最新幾天。"""
+    if not (hist or {}).get("_flows") or "TWD=X" not in hist:
+        return '<p class="empty">資料暫時讀不到</p>'
+    return (f'<div id="fx-flows">{tabs("flowrange", RANGES, "365")}'
+            '<div class="mk-chart"><svg class="mk-candles fx-long-svg" viewBox="0 0 1000 360" role="img" aria-label="外資買賣超與美元兌台幣"></svg>'
+            '<p class="mk-note fx-tip"></p></div><div class="stats"></div></div>')
+
+
+def chart_data(hist: dict | None, m: dict) -> str:
+    """兩張圖共用的資料（放在頁面裡一次）。"""
+    if not hist:
+        return ""
+    flows = dict(hist.get("_flows") or [])
+    flows.update({h["date"]: h["foreign"] for h in m.get("history") or [] if h.get("foreign") is not None})
+    data = {**hist, "_flows": sorted(flows.items())}
+    blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    return f'<script type="application/json" id="fx-long-data">{blob}</script>{CHART_SCRIPT}'
 
 
 def facts(m: dict, cs: list[dict]) -> dict:
@@ -259,5 +335,5 @@ def render(m: dict | None, hero, section, hist: dict | None = None, ai: dict | N
         body += section("AI 解讀", f'<p>{e(ai["text"])}</p>', f'{e(ai.get("made") or "")} 依當時數字整理・每天收盤後更新・僅供學習研究，不構成投資建議')
     body += section("匯率與股市連動", corr_table(cs), "美元／台幣 vs 台股・100 日圓／台幣 vs 日經・歐元／台幣 vs 歐洲 STOXX 50・美元指數 vs S&P 500")
     body += section("避險情緒", corr_table(hedge, ("恐慌指標", "匯率")), "市場緊張時，資金常流向日圓、美元：看 VIX 上升的日子，日圓、美元是否同步走強")
-    body += section("外資進出 vs 台幣", flows_vs_twd(m), "上：外資買賣超（上市，億元）・下：美元兌台幣收盤")
-    return body + "</main>" + TAB_SCRIPT
+    body += section("外資進出 vs 台幣", flows_chart(hist, m), "上：外資買賣超（上市，億元）・下：美元兌台幣收盤・最長近 10 年")
+    return body + "</main>" + TAB_SCRIPT + chart_data(hist, m)
