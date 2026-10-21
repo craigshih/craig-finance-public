@@ -15,7 +15,7 @@ permissions:
 jobs:
   push:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10   # AI 遇到用量上限會等待重試
     steps:
       - uses: actions/checkout@v4
         with:
