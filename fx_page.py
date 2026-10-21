@@ -281,6 +281,9 @@ PROMPT = """你是財經網站的編輯。依下面 JSON 資料，寫 2 到 3 �
 規則：
 - 只能用資料裡出現的數字，不要自己計算新數字，也不要補充資料以外的事實
 - 相關係數是過去的統計，不要寫成會發生的事；不預測漲跌，不給買賣建議，不提目標價
+- 相關係數絕對值小於 0.2 就說「幾乎沒有連動」，不要解讀成正向或負向關聯
+- 匯率方向：「美元兌台幣」「100 日圓兌台幣」「歐元兌台幣」是 1 單位外幣換多少台幣，數字下跌＝台幣升值、外幣走弱；數字上升＝台幣貶值、外幣走強
+- 重點放在「影響」，不要逐一複述每個數字
 回傳 JSON：{{"text": "那幾句話"}}
 
 資料：
@@ -300,7 +303,7 @@ def ai_view(f: dict) -> str:
     except Exception as exc:  # noqa: BLE001 — AI 失敗不能讓整個建站失敗
         print(f"⚠️ 匯率 AI 解讀失敗：{exc}", file=sys.stderr)
         return ""
-    if not text or len(text) > 300 or picks.has_banned(text) or not numbers_ok(text, data):
+    if not text or len(text) > 300 or picks.has_banned(text) or not numbers_ok(text, data + " 0.2"):  # 0.2 是提示詞裡的門檻
         print(f"⚠️ 匯率 AI 解讀沒通過檢查，不顯示：{text}", file=sys.stderr)
         return ""
     return text
