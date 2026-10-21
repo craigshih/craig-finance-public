@@ -64,9 +64,13 @@ def news() -> list[str]:
             r.raise_for_status()
             for it in ET.fromstring(r.content).iter("item"):
                 url, title = (it.findtext("link") or "").strip(), (it.findtext("title") or "").strip()
-                if title and url.startswith("https://news.cnyes.com/"):
-                    items[url] = (parsedate_to_datetime(it.findtext("pubDate")), title)
-        except (requests.RequestException, ET.ParseError, TypeError, ValueError) as exc:
+                try:
+                    t = parsedate_to_datetime(it.findtext("pubDate") or "")
+                except (TypeError, ValueError):
+                    continue  # 沒有時間的那則跳過，不影響其他則
+                if title and url.startswith("https://news.cnyes.com/") and t.tzinfo:
+                    items[url] = (t, title)
+        except (requests.RequestException, ET.ParseError) as exc:
             print(f"⚠️ 新聞 {feed} 讀取失敗：{exc}", file=sys.stderr)
     top = sorted(items.items(), key=lambda kv: kv[1][0], reverse=True)[:NEWS_MAX]
     return [f'• [{t.astimezone(TAIPEI):%H:%M} {title.replace("[", "［").replace("]", "］")}]({url})' for url, (t, title) in top]
@@ -126,12 +130,14 @@ PROMPT = """你是財經網站的編輯。依下面 JSON 資料，替每個區�
 
 
 def numbers_ok(text: str, data: str) -> bool:
-    """標題裡每個數字都要能在資料裡找到（允許 AI 四捨五入到較少位數）。"""
-    have = {float(n.replace(",", "")) for n in re.findall(r"\d[\d,]*(?:\.\d+)?", data)}
-    for n in re.findall(r"\d[\d,]*(?:\.\d+)?", text):
+    """標題裡每個數字都要能在資料裡找到（允許 AI 四捨五入到較少位數）。
+    數字前面明寫 +／- 時正負號也要對；沒寫正負號（例如「跌 0.14%」）就只比數值。"""
+    have = {float(n.replace(",", "")) for n in re.findall(r"-?\d[\d,]*(?:\.\d+)?", data)}
+    for sign, n in re.findall(r"(?<![\d.])([+\-−]?)(\d[\d,]*(?:\.\d+)?)", text):
         d = len(n.split(".")[1]) if "." in n else 0
         v = float(n.replace(",", ""))
-        if not any(round(h, d) == v or round(-h, d) == v for h in have):
+        ok = (lambda h: round(h, d) == v) if sign == "+" else (lambda h: round(h, d) == -v) if sign else (lambda h: abs(round(h, d)) == v)
+        if not any(ok(h) for h in have):
             return False
     return True
 
@@ -183,7 +189,10 @@ def lines(pick: dict | None, market: dict | None, us: dict | None, fx: dict) -> 
     rows = []  # (區塊, 前綴, AI 失敗時的固定句型, 連結)
     if fx:
         quotes = "・".join(f'{name} {fx[s]["price"] * unit:.3f}（{fx[s]["pct"]:+.2f}%）' for s, name, unit in FX if s in fx)
-        rows.append(("fx", f"台幣匯率 {quotes}", "", "fx/index.html"))
+        up = [name.replace("100 ", "") for s, name, _ in FX if s in fx and fx[s]["pct"] < 0]  # 外幣跌＝台幣升值
+        down = [name.replace("100 ", "") for s, name, _ in FX if s in fx and fx[s]["pct"] > 0]
+        fixed = "，".join(x for x in (up and f'台幣對{"、".join(up)}升值', down and f'對{"、".join(down)}貶值') if x)
+        rows.append(("fx", f"台幣匯率 {quotes}", fixed, "fx/index.html"))
     if "market" in f:
         rows.append(("market", f'台股 {(market.get("date") or "")[5:]}', market["summary"].split("；")[0], "market/index.html"))
     if "valuation" in f:

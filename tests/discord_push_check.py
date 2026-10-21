@@ -26,3 +26,14 @@ us = {"indices": [{"ticker": "^GSPC", "name": "S&P 500", "date": "2026-10-20", "
 vix = [x for x in dp.lines(None, None, us, {}) if "市場情緒" in x]
 assert vix and vix[0].startswith("• [市場情緒 VIX 17.31（-6.13%）｜近 52 週區間的 22% 位置](")
 print("vix ok")
+
+# 正負號：明寫的 +／- 要跟資料一致；沒寫正負號只比數值
+d2 = '{"外資":-795.4,"漲跌%":1.28,"日期":"2026-10-21"}'
+assert dp.numbers_ok("外資賣超 795.4 億", d2) and dp.numbers_ok("外資 -795.4 億", d2)
+assert not dp.numbers_ok("外資 +795.4 億", d2) and not dp.numbers_ok("台股 -1.28%", d2)
+assert dp.numbers_ok("10-21 台股 +1.28%", d2)               # 日期裡的「-」不是負號
+
+# 沒有 AI 時匯率那行也有一句固定說明
+fx2 = {"TWD=X": {"price": 32.4, "pct": -0.5}, "JPYTWD=X": {"price": 0.2029, "pct": -0.4}, "EURTWD=X": {"price": 36.4, "pct": 0.1}}
+assert "｜台幣對美元、日圓升值，對歐元貶值](" in dp.lines(None, None, None, fx2)[0]
+print("sign/fx ok")

@@ -113,9 +113,12 @@ def fx_history() -> None:
     """匯率近 10 年的日收盤，存 fx_history.json；失敗只記錄，不影響其他資料。"""
     import yfinance as yf
 
+    from fx_page import read_json, write_json
+
     path = OUT_DIR / "fx_history.json"
     today = datetime.now(TAIPEI).date().isoformat()
-    if path.exists() and json.loads(path.read_text(encoding="utf-8")).get("_updated") == today:
+    old = read_json(path)  # 檔案壞掉就當作沒有，重抓
+    if old.get("_updated") == today:
         return  # 一天抓一次就夠；網站每 10 分鐘重建時不用每次重抓 10 年資料
     fx = [(t, name) for t, name, region in INDICES if region == "匯率"]
     try:
@@ -123,7 +126,7 @@ def fx_history() -> None:
     except Exception as exc:  # noqa: BLE001
         log(f"⚠️ 匯率長期資料讀取失敗：{exc}")
         return
-    out = {"_updated": today}
+    out = {}
     for t, name in fx:
         try:
             c = data[t]["Close"].dropna() * SCALE.get(t, 1)
@@ -137,13 +140,21 @@ def fx_history() -> None:
                          params={"dataset": "TaiwanStockTotalInstitutionalInvestors",
                                  "start_date": (datetime.now(TAIPEI).date() - timedelta(days=3660)).isoformat()})
         rows = r.json().get("data") or []
-        out["_flows"] = [[x["date"], round((x["buy"] - x["sell"]) / 1e8, 1)] for x in rows if x.get("name") == "Foreign_Investor"]
-    except (requests.RequestException, ValueError) as exc:
+        # 這份是全市場合計（每天每類法人一筆，沒有個股欄位）
+        flows = [[x["date"], round((x["buy"] - x["sell"]) / 1e8, 1)] for x in rows if x.get("name") == "Foreign_Investor"]
+        if flows:
+            out["_flows"] = flows
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
         log(f"⚠️ 外資長期資料讀取失敗：{exc}")
-    if len(out) > 1:
-        path.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-        log("✅ 匯率長期資料：" + "、".join(f'{v["name"]} {len(v["closes"])} 天' for k, v in out.items() if not k.startswith("_"))
-            + f'、外資 {len(out.get("_flows") or [])} 天')
+    if not out:
+        return
+    complete = len(out) == len(fx) + 1
+    merged = {**{k: v for k, v in old.items() if k != "_updated"}, **out}  # 這次沒抓到的部分沿用舊資料
+    if complete:
+        merged["_updated"] = today  # 不完整就不標記，下次建站再試
+    write_json(path, merged)
+    log(("✅" if complete else "⚠️ 部分") + " 匯率長期資料：" + "、".join(f'{v["name"]} {len(v["closes"])} 天' for k, v in out.items() if not k.startswith("_"))
+        + f'、外資 {len(out.get("_flows") or [])} 天')
 
 
 # ---------- 產業熱力圖 ----------

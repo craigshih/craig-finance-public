@@ -5,12 +5,30 @@ AI 解讀跟 Discord 標題同一套規則：只能用這頁算出來的數字�
 AI 解讀由 market.py 呼叫 refresh_ai() 一天最多產生一次、存成 fx_ai.json；建站只讀檔（網站每 10 分鐘重建也不會一直呼叫 AI）。
 """
 import json
+import os
 import statistics
 import sys
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from market_page import TAB_SCRIPT, cls, e, index_board, tabs
+
+def read_json(path: Path) -> dict:
+    """讀快取；不存在或內容壞掉都回空的，讓呼叫的人重建。"""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def write_json(path: Path, obj) -> None:
+    """先寫暫存檔再整個換過去，寫到一半被中斷也不會留下壞掉的檔案。"""
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        json.dump(obj, fh, ensure_ascii=False, separators=(",", ":"))
+    os.replace(tmp, path)
+
 
 # (匯率, 「數字上升」代表什麼, 對照的股市)
 PAIRS = [("TWD=X", "台幣轉弱", "^TWII"), ("JPYTWD=X", "日圓走強", "^N225"),
@@ -205,12 +223,14 @@ CHART_SCRIPT = """<script>
       svg.append(el("polyline", { points: gs.map((g, i) => g.twd == null ? null : `${x(i).toFixed(1)},${yl(g.twd).toFixed(1)}`).filter(Boolean).join(" ") }),
         el("g", { class: "fx-ref" }), el("g", { class: "fx-hover" }));
       tip.textContent = `${unit === "日" ? "每日" : `每${unit}加總`}・${HINT}`;
-      const sum = rows.reduce((a, r) => a + r[1], 0), buy = rows.filter((r) => r[1] > 0).length;
+      const sum = rows.reduce((a, r) => a + r[1], 0), buy = rows.filter((r) => r[1] > 0).length, sell = rows.filter((r) => r[1] < 0).length;
       const best = rows.reduce((a, r) => (r[1] > a[1] ? r : a)), worst = rows.reduce((a, r) => (r[1] < a[1] ? r : a));
+      const flat = rows.length - buy - sell;
       fbox.querySelector(".stats").innerHTML =
         tile("期間外資累計", yi(Math.round(sum * 10) / 10), `${rows[0][0]} 起`, tone(sum)) +
-        tile("買超／賣超天數", `${buy}／${rows.length - buy}`, `共 ${rows.length} 個交易日`) +
-        tile("最大單日買超", yi(best[1]), best[0], "pos") + tile("最大單日賣超", yi(worst[1]), worst[0], "neg") +
+        tile("買超／賣超天數", `${buy}／${sell}`, `共 ${rows.length} 個交易日${flat ? `、持平 ${flat} 天` : ""}`) +
+        tile("最大單日買超", buy ? yi(best[1]) : "—", buy ? best[0] : "期間沒有買超日", buy ? "pos" : "") +
+        tile("最大單日賣超", sell ? yi(worst[1]) : "—", sell ? worst[0] : "期間沒有賣超日", sell ? "neg" : "") +
         tile("美元兌台幣", ls.length ? `${ls[0] <= ls[ls.length - 1] ? "+" : ""}${((ls[ls.length - 1] / ls[0] - 1) * 100).toFixed(2)}%` : "—",
           ls.length ? `${fmt(ls[0])} → ${fmt(ls[ls.length - 1])}（正＝台幣轉弱）` : "");
     };
@@ -238,6 +258,8 @@ def long_chart(hist: dict | None) -> str:
     if not hist:
         return '<p class="empty">長期資料暫時讀不到</p>'
     keys = [t for t, *_ in PAIRS if t in hist]
+    if not keys:
+        return '<p class="empty">長期資料暫時讀不到</p>'
     return (f'<div id="fx-long">{tabs("fxcur", [(t, hist[t]["name"]) for t in keys], keys[0])} {tabs("fxrange", RANGES, "1095")}'
             '<div class="mk-chart"><svg class="mk-candles fx-long-svg" viewBox="0 0 1000 300" role="img" aria-label="匯率長期走勢"></svg>'
             '<p class="mk-note fx-tip"></p></div><div class="stats"></div></div>')
@@ -317,15 +339,17 @@ def refresh_ai(m: dict, path: Path) -> None:
     from discord_push import GROQ_KEY
 
     if not GROQ_KEY():
-        return  # 沒有金鑰不記錄，等金鑰設好當天就能產生
+        path.unlink(missing_ok=True)  # 拿掉金鑰＝不要 AI 解讀，舊的那段也一起拿掉
+        return
     now = datetime.now(timezone(timedelta(hours=8)))
     today = now.date().isoformat()
-    old = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
-    if old.get("date") == today or (old and now.strftime("%H%M") < "1530"):
+    if now.strftime("%H%M") < "1530":
+        return  # 收盤資料還沒齊，不寫盤中的解讀
+    old = read_json(path)
+    if old.get("date") == today:
         return
     text = ai_view(facts(m, correlations(m) + correlations(m, HEDGE)))
-    path.write_text(json.dumps({"date": today, "text": text or old.get("text", ""), "made": today if text else old.get("made")},
-                               ensure_ascii=False), encoding="utf-8")
+    write_json(path, {"date": today, "text": text or old.get("text", ""), "made": today if text else old.get("made")})
 
 
 def render(m: dict | None, hero, section, hist: dict | None = None, ai: dict | None = None) -> str:
